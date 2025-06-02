@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
         duplikat: {
             icon: "warning",
             title: "Data Duplikat",
-            text: "Nama dan satuan barang sudah digunakan.",
+            text: "Data sudah digunakan.",
         },
         invalid: {
             icon: "warning",

@@ -82,11 +82,13 @@ CREATE TABLE IF NOT EXISTS `pegawai` (
   UNIQUE KEY `nip` (`nip`),
   KEY `id_user` (`id_user`),
   CONSTRAINT `pegawai_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.pegawai: ~0 rows (approximately)
+-- Dumping data for table dinasgo.pegawai: ~3 rows (approximately)
 INSERT INTO `pegawai` (`id`, `id_user`, `nip`, `nama`, `jabatan`, `no_hp`, `email`, `alamat`) VALUES
-	(1, 2, '198512312022011001', 'Ahmad Faisal', 'Staf Teknik', '081234567890', 'ahmad@example.com', 'Jl. Sungai Martapura No. 12');
+	(1, 2, '198512312022011001', 'Ahmad Faisal', 'Staf Teknik', '081234567890', 'ahmad@example.com', 'Jl. Sungai Martapura No. 12'),
+	(2, 1, '45789652', 'tets', 'tets edit', '785151', 'contoh@example.com', 'JL Test'),
+	(4, 1, '78521415', 'Dolor sunt quaerat', 'Consequatur saepe an', '147862255', 'kamami@mailinator.com', 'Ut debitis a corpori');
 
 -- Dumping structure for table dinasgo.pencairan_dana
 CREATE TABLE IF NOT EXISTS `pencairan_dana` (
@@ -156,20 +158,21 @@ CREATE TABLE IF NOT EXISTS `sppd` (
 -- Dumping structure for table dinasgo.user
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `nama` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `username` varchar(50) NOT NULL,
-  `nama` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('admin','pegawai','atasan','bendahara') NOT NULL,
   `status` enum('aktif','nonaktif') DEFAULT 'aktif',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.user: ~4 rows (approximately)
-INSERT INTO `user` (`id`, `username`, `nama`, `password`, `role`, `status`) VALUES
-	(1, 'admin01', 'Admin Utama', 'admin123', 'admin', 'aktif'),
-	(2, 'pegawai01', 'Budi Pegawai', 'pegawai123', 'pegawai', 'aktif'),
-	(3, 'atasan01', 'Andi Atasan', 'atasan123', 'atasan', 'aktif'),
-	(4, 'bendahara01', 'Sari Bendahara', 'bendahara123', 'bendahara', 'aktif');
+-- Dumping data for table dinasgo.user: ~5 rows (approximately)
+INSERT INTO `user` (`id`, `nama`, `username`, `password`, `role`, `status`) VALUES
+	(1, 'Admin Utama', 'admin01', 'admin123', 'admin', 'aktif'),
+	(2, 'Budi Pegawai', 'pegawai01', 'pegawai123', 'pegawai', 'aktif'),
+	(3, 'Andi Atasan', 'atasan01', 'atasan123', 'atasan', 'aktif'),
+	(4, 'Sari Bendahara', 'bendahara01', 'bendahara123', 'bendahara', 'aktif'),
+	(5, 'test', 'testpegawai12', 'test123', 'pegawai', 'nonaktif');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

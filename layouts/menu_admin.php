@@ -42,7 +42,7 @@ $current_page = str_replace(BASE_PATH, '', __FILE__);
                     </a>
                 </li>
                 <li class="slide">
-                    <a href="<?= BASE_URL ?>/modules/admin/index.php.php" class="side-menu__item <?= $current_page === 'pengajuan.php' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>/modules/shared/pengajuan/index.php" class="side-menu__item <?= $current_page === 'index.php' ? 'active' : '' ?>">
                         Form Pengajuan Perjalanan
                     </a>
                 </li>
