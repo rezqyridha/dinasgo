@@ -13,6 +13,15 @@ $current_page = str_replace(BASE_PATH, '', __FILE__);
 
     <ul class="main-menu">
         <!-- Dashboard -->
+        <li class="slide__category"><span class="category-name">Dashboard</span></li>
+        <li class="slide <?= $current_page === 'dashboard.php' ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/modules/admin/dashboard.php" class="side-menu__item">
+                <span class="shape1"></span><span class="shape2"></span>
+                <i class="ti-home side-menu__icon"></i>
+                <span class="side-menu__label">Dashboard</span>
+            </a>
+        </li>
+
         <li class="slide__category"><span class="category-name">Data</span></li>
         <li class="slide has-sub <?= in_array($current_page, ['pegawai.php', 'user.php', 'pengajuan.php', 'persetujuan.php', 'sppd.php', 'dokumen.php', 'evaluasi.php']) ? 'active' : '' ?>">
             <a href="javascript:void(0);" class="side-menu__item">
@@ -23,27 +32,27 @@ $current_page = str_replace(BASE_PATH, '', __FILE__);
             </a>
             <ul class="slide-menu child2">
                 <li class="slide">
-                    <a href="<?= BASE_URL ?>/modules/shared/pegawai/index.php" class="side-menu__item <?= $current_page === 'pegawai.php' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>/modules/shared/pegawai/index.php" class="side-menu__item <?= $current_page === 'index.php' ? 'active' : '' ?>">
                         Manajemen Pegawai
                     </a>
                 </li>
                 <li class="slide">
-                    <a href="<?= BASE_URL ?>/modules/admin/user.php" class="side-menu__item <?= $current_page === 'user.php' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>/modules/admin/user/index.php" class="side-menu__item <?= $current_page === 'index.php' ? 'active' : '' ?>">
                         Manajemen User (Login/Akun)
                     </a>
                 </li>
                 <li class="slide">
-                    <a href="<?= BASE_URL ?>/modules/admin/pengajuan.php" class="side-menu__item <?= $current_page === 'pengajuan.php' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>/modules/admin/index.php.php" class="side-menu__item <?= $current_page === 'pengajuan.php' ? 'active' : '' ?>">
                         Form Pengajuan Perjalanan
                     </a>
                 </li>
                 <li class="slide">
-                    <a href="<?= BASE_URL ?>/modules/admin/persetujuan.php" class="side-menu__item <?= $current_page === 'persetujuan.php' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>/modules/admin/index.php" class="side-menu__item <?= $current_page === 'persetujuan.php' ? 'active' : '' ?>">
                         Persetujuan Perjalanan
                     </a>
                 </li>
                 <li class="slide">
-                    <a href="<?= BASE_URL ?>/modules/admin/sppd.php" class="side-menu__item <?= $current_page === 'sppd.php' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>/modules/admin/index.php" class="side-menu__item <?= $current_page === 'sppd.php' ? 'active' : '' ?>">
                         Pencairan Biaya / Proses SPPD
                     </a>
                 </li>
@@ -116,8 +125,6 @@ $current_page = str_replace(BASE_PATH, '', __FILE__);
                 </li>
             </ul>
         </li>
-
-
         <div class="slide-right" id="slide-right">
             <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">
                 <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path>
