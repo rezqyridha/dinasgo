@@ -1,5 +1,6 @@
 <?php
-$current_page = basename($_SERVER['PHP_SELF']);
+require_once BASE_PATH . '/config/constants.php';
+$current_page = str_replace(BASE_PATH, '', __FILE__);
 ?>
 
 <!-- Start::nav -->
@@ -12,58 +13,58 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
     <ul class="main-menu">
         <!-- Dashboard -->
-        <li class="slide__category"><span class="category-name">Dashboard</span></li>
-        <li class="slide <?= $current_page === 'dashboard.php' ? 'active' : '' ?>">
-            <a href="/dinasgo/modules/admin/dashboard.php" class="side-menu__item">
-                <span class="shape1"></span><span class="shape2"></span>
-                <i class="ti-home side-menu__icon"></i>
-                <span class="side-menu__label">Dashboard</span>
-            </a>
-        </li>
-
-        <!-- Form -->
-        <li class="slide__category"><span class="category-name">Form</span></li>
-        <li class="slide has-sub <?= in_array($current_page, ['form-pegawai.php', 'form-spt.php', 'form-biperjalanan.php', 'form-dokperjalanan.php', 'form-pelakperjalanan.php', 'form-persetujuan.php', 'form-kepala.php']) ? 'active' : '' ?>">
-            <a href="javascript:void(0);" class="side-menu__item">
-                <span class="shape1"></span><span class="shape2"></span>
-                <i class="ti-write side-menu__icon"></i>
-                <span class="side-menu__label">Form</span>
-                <i class="fe fe-chevron-right side-menu__angle"></i>
-            </a>
-            <ul class="slide-menu child1">
-                <li class="slide"><a href="/dinasgo/modules/admin/form-pegawai.php" class="side-menu__item <?= $current_page === 'form-pegawai.php' ? 'active' : '' ?>">Pegawai</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/form-spt.php" class="side-menu__item <?= $current_page === 'form-spt.php' ? 'active' : '' ?>">SPT</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/form-biperjalanan.php" class="side-menu__item <?= $current_page === 'form-biperjalanan.php' ? 'active' : '' ?>">Biaya Perjalanan</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/form-dokperjalanan.php" class="side-menu__item <?= $current_page === 'form-dokperjalanan.php' ? 'active' : '' ?>">Dokumen Biaya Perjalanan</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/form-pelakperjalanan.php" class="side-menu__item <?= $current_page === 'form-pelakperjalanan.php' ? 'active' : '' ?>">Pelaksanaan Perjalanan</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/form-persetujuan.php" class="side-menu__item <?= $current_page === 'form-persetujuan.php' ? 'active' : '' ?>">Persetujuan SPPD</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/form-kepala.php" class="side-menu__item <?= $current_page === 'form-kepala.php' ? 'active' : '' ?>">Kepala</a></li>
-            </ul>
-        </li>
-
-        <!-- Data -->
         <li class="slide__category"><span class="category-name">Data</span></li>
-        <li class="slide has-sub <?= in_array($current_page, ['pegawai.php', 'spt.php', 'biperjalanan.php', 'dokperjalanan.php', 'pelakperjalanan.php', 'persetujuan.php', 'kepala.php']) ? 'active' : '' ?>">
+        <li class="slide has-sub <?= in_array($current_page, ['pegawai.php', 'user.php', 'pengajuan.php', 'persetujuan.php', 'sppd.php', 'dokumen.php', 'evaluasi.php']) ? 'active' : '' ?>">
             <a href="javascript:void(0);" class="side-menu__item">
                 <span class="shape1"></span><span class="shape2"></span>
                 <i class="ti ti-database side-menu__icon"></i>
-                <span class="side-menu__label">Data</span>
+                <span class="side-menu__label">Manajemen</span>
                 <i class="fe fe-chevron-right side-menu__angle"></i>
             </a>
             <ul class="slide-menu child2">
-                <li class="slide"><a href="/dinasgo/modules/shared/pegawai/index.php" class="side-menu__item">Pegawai</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/spt.php" class="side-menu__item <?= $current_page === 'spt.php' ? 'active' : '' ?>">SPT</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/biperjalanan.php" class="side-menu__item <?= $current_page === 'biperjalanan.php' ? 'active' : '' ?>">Biaya Perjalanan</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/dokperjalanan.php" class="side-menu__item <?= $current_page === 'dokperjalanan.php' ? 'active' : '' ?>">Dokumen Biaya Perjalanan</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/pelakperjalanan.php" class="side-menu__item <?= $current_page === 'pelakperjalanan.php' ? 'active' : '' ?>">Pelaksanaan Perjalanan</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/persetujuan.php" class="side-menu__item <?= $current_page === 'persetujuan.php' ? 'active' : '' ?>">Persetujuan SPPD</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/kepala.php" class="side-menu__item <?= $current_page === 'kepala.php' ? 'active' : '' ?>">Kepala</a></li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/shared/pegawai/index.php" class="side-menu__item <?= $current_page === 'pegawai.php' ? 'active' : '' ?>">
+                        Manajemen Pegawai
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/user.php" class="side-menu__item <?= $current_page === 'user.php' ? 'active' : '' ?>">
+                        Manajemen User (Login/Akun)
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/pengajuan.php" class="side-menu__item <?= $current_page === 'pengajuan.php' ? 'active' : '' ?>">
+                        Form Pengajuan Perjalanan
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/persetujuan.php" class="side-menu__item <?= $current_page === 'persetujuan.php' ? 'active' : '' ?>">
+                        Persetujuan Perjalanan
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/sppd.php" class="side-menu__item <?= $current_page === 'sppd.php' ? 'active' : '' ?>">
+                        Pencairan Biaya / Proses SPPD
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/dokumen.php" class="side-menu__item <?= $current_page === 'dokumen.php' ? 'active' : '' ?>">
+                        Upload Dokumen Perjalanan
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/evaluasi.php" class="side-menu__item <?= $current_page === 'evaluasi.php' ? 'active' : '' ?>">
+                        Evaluasi Perjalanan
+                    </a>
+                </li>
             </ul>
         </li>
 
+
         <!-- Laporan -->
+        <!-- Kategori Laporan -->
         <li class="slide__category"><span class="category-name">Laporan</span></li>
-        <li class="slide has-sub <?= in_array($current_page, ['laporan-spt.php', 'laporan-biperjalanan.php', 'laporan-dokperjalanan.php', 'laporan-pelakperjalanan.php', 'laporan-persetujuan.php']) ? 'active' : '' ?>">
+        <li class="slide has-sub <?= str_contains($current_page, '/modules/admin/laporan') ? 'active' : '' ?>">
             <a href="javascript:void(0);" class="side-menu__item">
                 <span class="shape1"></span><span class="shape2"></span>
                 <i class="fa fa-file side-menu__icon"></i>
@@ -71,19 +72,56 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <i class="fe fe-chevron-right side-menu__angle"></i>
             </a>
             <ul class="slide-menu child2">
-                <li class="slide"><a href="/dinasgo/modules/admin/laporan-spt.php" class="side-menu__item <?= $current_page === 'laporan-spt.php' ? 'active' : '' ?>">SPT</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/laporan-biperjalanan.php" class="side-menu__item <?= $current_page === 'laporan-biperjalanan.php' ? 'active' : '' ?>">Biaya Perjalanan Dinas</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/laporan-dokperjalanan.php" class="side-menu__item <?= $current_page === 'laporan-dokperjalanan.php' ? 'active' : '' ?>">Dokumen Biaya Perjalanan</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/laporan-pelakperjalanan.php" class="side-menu__item <?= $current_page === 'laporan-pelakperjalanan.php' ? 'active' : '' ?>">Pelaksanaan Perjalanan</a></li>
-                <li class="slide"><a href="/dinasgo/modules/admin/laporan-persetujuan.php" class="side-menu__item <?= $current_page === 'laporan-persetujuan.php' ? 'active' : '' ?>">Persetujuan SPPD</a></li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/laporan/laporan-data.php"
+                        class="side-menu__item <?= str_contains($current_page, '/laporan/laporan-data.php') ? 'active' : '' ?>">
+                        Laporan Data Perjalanan Dinas
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/laporan/laporan-biaya.php"
+                        class="side-menu__item <?= str_contains($current_page, '/laporan/laporan-biaya.php') ? 'active' : '' ?>">
+                        Laporan Biaya Perjalanan
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/laporan/laporan-evaluasi.php"
+                        class="side-menu__item <?= str_contains($current_page, '/laporan/laporan-evaluasi.php') ? 'active' : '' ?>">
+                        Laporan Evaluasi Perjalanan
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/laporan/laporan-persetujuan.php"
+                        class="side-menu__item <?= str_contains($current_page, '/laporan/laporan-persetujuan.php') ? 'active' : '' ?>">
+                        Laporan Persetujuan
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/laporan/laporan-anggaran.php"
+                        class="side-menu__item <?= str_contains($current_page, '/laporan/laporan-anggaran.php') ? 'active' : '' ?>">
+                        Laporan Monitoring Anggaran
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/laporan/laporan-sppd.php"
+                        class="side-menu__item <?= str_contains($current_page, '/laporan/laporan-sppd.php') ? 'active' : '' ?>">
+                        Laporan SPPD (Cetak Format Resmi)
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="<?= BASE_URL ?>/modules/admin/laporan/laporan-efektivitas.php"
+                        class="side-menu__item <?= str_contains($current_page, '/laporan/laporan-efektivitas.php') ? 'active' : '' ?>">
+                        Laporan Efektivitas Perjalanan
+                    </a>
+                </li>
             </ul>
         </li>
-    </ul>
 
-    <div class="slide-right" id="slide-right">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">
-            <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path>
-        </svg>
-    </div>
+
+        <div class="slide-right" id="slide-right">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">
+                <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path>
+            </svg>
+        </div>
 </nav>
 <!-- End::nav -->

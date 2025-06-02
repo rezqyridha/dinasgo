@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . '../../../../auth/session.php';
-require_once __DIR__ . '../../../../config/koneksi.php';
+require_once __DIR__ . '/../../../config/constants.php';
+require_once BASE_PATH . '/auth/session.php';
+require_once BASE_PATH . '/config/koneksi.php';
 
 $pageTitle = 'Data Pegawai';
 $isAdmin = ($_SESSION['role'] === 'admin');
@@ -17,14 +18,14 @@ if (!$result) {
 
 <!DOCTYPE html>
 <html lang="id">
-<?php include_once __DIR__ . '../../../../layouts/head.php'; ?>
+<?php include_once BASE_PATH . '/layouts/head.php'; ?>
 
 <body>
     <div class="page">
         <?php
-        include_once __DIR__ . '../../../../layouts/header.php';
-        include_once __DIR__ . '../../../../layouts/topbar.php';
-        include_once __DIR__ . '../../../../layouts/sidebar.php';
+        include_once BASE_PATH . '/layouts/header.php';
+        include_once BASE_PATH . '/layouts/topbar.php';
+        include_once BASE_PATH . '/layouts/sidebar.php';
         ?>
 
         <div class="main-content app-content">
@@ -73,14 +74,14 @@ if (!$result) {
                                                 <?php if ($isAdmin): ?>
                                                     <td>
                                                         <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-                                                        <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus?')">Hapus</a>
+                                                        <a href="#" onclick="confirmDelete('delete.php?id=<?= $row['id'] ?>')" class="btn btn-danger btn-sm">Hapus</a>
                                                     </td>
                                                 <?php endif; ?>
                                             </tr>
                                         <?php endwhile; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td colspan="<?= $isAdmin ?  8 : 7 ?>" class="text-center">Data pegawai tidak tersedia.</td>
+                                            <td colspan="<?= $isAdmin ? 8 : 7 ?>" class="text-center">Data pegawai tidak tersedia.</td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -88,12 +89,13 @@ if (!$result) {
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
 
         <?php
-        include_once __DIR__ . '../../../../layouts/footer.php';
-        include_once __DIR__ . '../../../../layouts/scripts.php';
+        include_once BASE_PATH . '/layouts/footer.php';
+        include_once BASE_PATH . '/layouts/scripts.php';
         ?>
     </div>
 </body>

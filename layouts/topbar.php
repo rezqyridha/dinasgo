@@ -9,8 +9,8 @@ $menuFile = __DIR__ . "/menu_$role.php";
         <div class="header-content-left">
             <div class="header-element">
                 <div class="horizontal-logo">
-                    <a href="/dinasgo/modules/<?= $_SESSION['role'] ?>/dashboard.php" class="header-logo">
-                        <img src="/dinasgo/assets/images/brand-logos/PUPR.png" alt="logo topbar" style="height: 40px; display: block;">
+                    <a href="<?= BASE_URL ?>/modules/<?= $_SESSION['role'] ?>/dashboard.php" class="header-logo">
+                        <img src="<?= BASE_URL ?>/assets/images/brand-logos/PUPR.png" alt="logo topbar" style="height: 40px; ">
                     </a>
                 </div>
             </div>
@@ -23,7 +23,7 @@ $menuFile = __DIR__ . "/menu_$role.php";
                 <a href="javascript:void(0);" class="header-link dropdown-toggle" id="mainHeaderProfile" data-bs-toggle="dropdown" aria-expanded="false">
                     <div class="d-flex align-items-center">
                         <div class="header-link-icon">
-                            <img src="/dinasgo/assets/images/faces/1.jpg" alt="img" class="rounded-circle" width="32" height="32">
+                            <img src="<?= BASE_URL ?>/assets/images/faces/1.jpg" alt="img" class="rounded-circle" width="32" height="32">
                         </div>
                     </div>
                 </a>
@@ -35,7 +35,7 @@ $menuFile = __DIR__ . "/menu_$role.php";
                         </div>
                     </li>
                     <li><a class="dropdown-item d-flex border-bottom" href="#"><i class="fe fe-user fs-16 me-2"></i>Profile</a></li>
-                    <li><a class="dropdown-item d-flex" href="/dinasgo/auth/logout.php"><i class="fe fe-power fs-16 me-2"></i>Log Out</a></li>
+                    <li><a class="dropdown-item d-flex" href="<?= BASE_URL ?>/auth/logout.php"><i class="fe fe-power fs-16 me-2"></i>Log Out</a></li>
                 </ul>
             </div>
         </div>
