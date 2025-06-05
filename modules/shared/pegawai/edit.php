@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="main-content app-content">
             <div class="container-fluid">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
+                    <h2 class="mt-3 mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
                 </div>
 
                 <div class="card custom-card">

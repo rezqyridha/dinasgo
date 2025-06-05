@@ -155,6 +155,29 @@ CREATE TABLE IF NOT EXISTS `sppd` (
 
 -- Dumping data for table dinasgo.sppd: ~0 rows (approximately)
 
+-- Dumping structure for table dinasgo.spt
+CREATE TABLE IF NOT EXISTS `spt` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_pengajuan` int NOT NULL,
+  `nomor_spt` varchar(100) NOT NULL,
+  `tanggal_spt` date NOT NULL,
+  `maksud_perjalanan` text NOT NULL,
+  `lama_perjalanan` varchar(50) NOT NULL,
+  `transportasi` varchar(100) NOT NULL,
+  `status` enum('draft','ditandatangani','dibatalkan') DEFAULT 'draft',
+  `ditandatangani_oleh` int DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nomor_spt` (`nomor_spt`),
+  KEY `fk_spt_pengajuan` (`id_pengajuan`),
+  KEY `fk_spt_user` (`ditandatangani_oleh`),
+  CONSTRAINT `fk_spt_pengajuan` FOREIGN KEY (`id_pengajuan`) REFERENCES `pengajuan_perjalanan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_spt_user` FOREIGN KEY (`ditandatangani_oleh`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table dinasgo.spt: ~0 rows (approximately)
+
 -- Dumping structure for table dinasgo.user
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int NOT NULL AUTO_INCREMENT,

@@ -14,13 +14,26 @@ if (!$canRead) {
 }
 
 // Query data pengajuan + nama pegawai
-$query = "
-    SELECT p.*, u.nama AS nama_pegawai 
-    FROM pengajuan_perjalanan p
-    JOIN user u ON p.id_pegawai = u.id
-    ORDER BY p.created_at DESC
-";
+if ($role === 'pegawai') {
+    $id_user = $_SESSION['user_id'];
+    $query = "
+        SELECT p.*, u.nama AS nama_pegawai 
+        FROM pengajuan_perjalanan p
+        JOIN user u ON p.id_pegawai = u.id
+        WHERE p.id_pegawai = $id_user
+        ORDER BY p.created_at DESC
+    ";
+} else {
+    $query = "
+        SELECT p.*, u.nama AS nama_pegawai 
+        FROM pengajuan_perjalanan p
+        JOIN user u ON p.id_pegawai = u.id
+        ORDER BY p.created_at DESC
+    ";
+}
+
 $result = $conn->query($query);
+
 ?>
 
 <!DOCTYPE html>
@@ -39,9 +52,9 @@ $result = $conn->query($query);
             <div class="container-fluid">
                 <!-- Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
+                    <h2 class="mt-3 mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
                     <?php if ($role === 'pegawai'): ?>
-                        <a href="add.php" class="btn btn-primary">
+                        <a href="add.php" class="btn btn-primary mt-3">
                             <i class="fas fa-plus"></i> Tambah Pengajuan
                         </a>
                     <?php endif; ?>
@@ -85,9 +98,9 @@ $result = $conn->query($query);
                                                 <td><?= htmlspecialchars($row['nama_pegawai']) ?></td>
                                                 <td><?= htmlspecialchars($row['tujuan']) ?></td>
                                                 <td><?= htmlspecialchars($row['keperluan']) ?></td>
-                                                <td><?= htmlspecialchars($row['tgl_berangkat']) ?></td>
-                                                <td><?= htmlspecialchars($row['tgl_kembali']) ?></td>
-                                                <td><?= htmlspecialchars($row['tanggal_pengajuan']) ?></td>
+                                                <td><?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?></td>
+                                                <td><?= date('d-m-Y', strtotime($row['tanggal_kembali'])) ?></td>
+                                                <td><?= $row['created_at'] ? date('d-m-Y', strtotime($row['created_at'])) : '-' ?></td>
                                                 <td><span class="badge bg-<?= $badgeClass ?>"><?= ucfirst($status) ?></span></td>
                                                 <?php if ($role === 'pegawai' && $status === 'diajukan'): ?>
                                                     <td>

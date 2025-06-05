@@ -32,9 +32,9 @@ if (!$result) {
             <div class="container-fluid">
                 <!-- Page Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
+                    <h2 class="mt-3 mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
                     <?php if ($isAdmin): ?>
-                        <a href="add.php" class="btn btn-primary">
+                        <a href="add.php" class="btn btn-primary mt-3">
                             <i class="fas fa-plus"></i> Tambah Pegawai
                         </a>
                     <?php endif; ?>

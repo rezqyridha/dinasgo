@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="main-content app-content">
             <div class="container-fluid">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
+                    <h2 class="mt-3 mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
                 </div>
 
                 <div class="card custom-card">
@@ -114,8 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="mb-3">
                                 <label for="role" class="form-label">Role</label>
                                 <select class="form-select" name="role" id="role" required>
-                                    <option value="admin" <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
+                                    <?php if ($user['role'] === 'admin'): ?>
+                                        <option value="admin" selected>Admin</option>
+                                    <?php endif; ?>
+
                                     <option value="pegawai" <?= $user['role'] === 'pegawai' ? 'selected' : '' ?>>Pegawai</option>
+                                    <option value="atasan" <?= $user['role'] === 'atasan' ? 'selected' : '' ?>>Atasan</option>
+                                    <option value="bendahara" <?= $user['role'] === 'bendahara' ? 'selected' : '' ?>>Bendahara</option>
                                 </select>
                             </div>
                             <div class="mb-3">

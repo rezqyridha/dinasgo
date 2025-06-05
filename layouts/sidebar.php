@@ -1,10 +1,9 @@
 <?php
-require_once __DIR__ . '/../auth/session.php'; // Pastikan sesi aktif
 
 $role = $_SESSION['role'] ?? 'guest';
 $menuFile = __DIR__ . "/menu_$role.php";
 ?>
-// Sidebar ATAS
+<!-- Sidebar ATAS -->
 <aside class="app-sidebar sticky" id="sidebar">
     <!-- Start::main-sidebar-header -->
     <div class="main-sidebar-header">

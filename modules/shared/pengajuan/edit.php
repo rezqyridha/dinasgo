@@ -13,7 +13,6 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     exit;
 }
 
-
 $query = $conn->prepare("SELECT * FROM pengajuan_perjalanan WHERE id = ?");
 $query->bind_param("i", $id);
 $query->execute();
@@ -25,8 +24,13 @@ if (!$data) {
     exit;
 }
 
-// Cegah pegawai mengedit jika status bukan diajukan
-if ($isPegawai && $data['status'] !== 'diajukan') {
+if ($data['status'] !== 'diajukan') {
+    echo "<script>alert('Data tidak dapat diubah. Status saat ini tidak valid.');location.href='index.php';</script>";
+    exit;
+}
+
+// Proteksi: hanya pegawai pemilik pengajuan yang bisa edit
+if ($isPegawai && $data['id_pegawai'] != $_SESSION['user_id']) {
     header("Location: index.php?msg=forbidden");
     exit;
 }

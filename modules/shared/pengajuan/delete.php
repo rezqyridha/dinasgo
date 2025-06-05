@@ -27,7 +27,8 @@ if (!$data) {
     exit;
 }
 
-if ($data['status'] !== 'diajukan') {
+// Proteksi: hanya pemilik data yang bisa hapus
+if ($data['id_pegawai'] != $_SESSION['user_id']) {
     header("Location: index.php?msg=forbidden");
     exit;
 }

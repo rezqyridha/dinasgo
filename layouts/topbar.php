@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../auth/session.php'; // Pastikan sesi aktif
 
 $role = $_SESSION['role'] ?? 'guest';
 $menuFile = __DIR__ . "/menu_$role.php";
