@@ -1,66 +1,67 @@
 <?php
 require_once __DIR__ . '/../../../config/constants.php';
-require_once BASE_PATH . '/auth/session.php';
-require_once BASE_PATH . '/config/koneksi.php';
+require_once CONFIG_PATH . '/koneksi.php';
+require_once AUTH_PATH . '/session.php';
 
-if ($_SESSION['role'] !== 'pegawai') {
-    header("Location: index.php?msg=unauthorized");
+$role = $_SESSION['role'];
+$id_user = $_SESSION['id_user'];
+
+if (!in_array($role, ['admin', 'pegawai'])) {
+    header("Location: index.php?msg=unauthorized&obj=pengajuan");
     exit;
 }
 
-$id = $_GET['id'] ?? null;
-if (!$id || !is_numeric($id)) {
-    header("Location: index.php?msg=invalid");
+$id = (int)($_GET['id'] ?? 0);
+if ($id <= 0) {
+    header("Location: index.php?msg=invalid&obj=pengajuan");
     exit;
 }
 
-// Cek status pengajuan
-$cek = $conn->prepare("SELECT status FROM pengajuan_perjalanan WHERE id = ?");
-$cek->bind_param("i", $id);
-$cek->execute();
-$result = $cek->get_result();
+// Ambil data pengajuan
+$stmt = $conn->prepare("
+    SELECT p.id, p.id_pegawai, p.status 
+    FROM pengajuan_perjalanan p
+    JOIN pegawai pg ON p.id_pegawai = pg.id
+    WHERE p.id = ?
+");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
 $data = $result->fetch_assoc();
-$cek->close();
+$stmt->close();
 
 if (!$data) {
-    header("Location: index.php?msg=notfound");
+    header("Location: index.php?msg=invalid&obj=pengajuan");
     exit;
 }
 
-// Proteksi: hanya pemilik data yang bisa hapus
-if ($data['id_pegawai'] != $_SESSION['user_id']) {
-    header("Location: index.php?msg=forbidden");
-    exit;
+// Jika pegawai, pastikan hanya hapus miliknya
+if ($role === 'pegawai') {
+    $stmt = $conn->prepare("SELECT id FROM pegawai WHERE id_user = ?");
+    $stmt->bind_param("i", $id_user);
+    $stmt->execute();
+    $stmt->bind_result($id_pegawai);
+    $stmt->fetch();
+    $stmt->close();
+
+    if ($data['id_pegawai'] != $id_pegawai) {
+        header("Location: index.php?msg=unauthorized&obj=pengajuan");
+        exit;
+    }
+
+    // Tidak boleh hapus jika status bukan diajukan
+    if ($data['status'] !== 'diajukan') {
+        header("Location: index.php?msg=locked&obj=pengajuan");
+        exit;
+    }
 }
 
-// Cek relasi ke modul lain
-$cekRelasi = $conn->prepare("
-    SELECT 1 FROM dokumen WHERE id_pengajuan = ?
-    UNION
-    SELECT 1 FROM evaluasi_perjalanan WHERE id_pengajuan = ?
-    UNION
-    SELECT 1 FROM pencairan_dana WHERE id_pengajuan = ?
-    UNION
-    SELECT 1 FROM persetujuan WHERE id_pengajuan = ?
-    UNION
-    SELECT 1 FROM sppd WHERE id_pengajuan = ?
-    LIMIT 1
-");
-$cekRelasi->bind_param("iiiii", $id, $id, $id, $id, $id);
-$cekRelasi->execute();
-$cekRelasi->store_result();
-
-if ($cekRelasi->num_rows > 0) {
-    $cekRelasi->close();
-    header("Location: index.php?msg=fk_blocked");
-    exit;
+// Lanjut hapus
+$stmt = $conn->prepare("DELETE FROM pengajuan_perjalanan WHERE id = ?");
+$stmt->bind_param("i", $id);
+if ($stmt->execute()) {
+    header("Location: index.php?msg=deleted&obj=pengajuan");
+} else {
+    header("Location: index.php?msg=failed&obj=pengajuan");
 }
-$cekRelasi->close();
-
-// Hapus data jika aman
-$delete = $conn->prepare("DELETE FROM pengajuan_perjalanan WHERE id = ?");
-$delete->bind_param("i", $id);
-$delete->execute();
-
-header("Location: index.php?msg=deleted");
 exit;

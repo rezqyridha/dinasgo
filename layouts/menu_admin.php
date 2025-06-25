@@ -38,7 +38,7 @@ function is_uri_match(array $patterns): bool
                 <i class="fe fe-chevron-right side-menu__angle"></i>
             </a>
             <ul class="slide-menu child2">
-                <li><a href="<?= BASE_URL ?>/modules/shared/pegawai/index.php" class="side-menu__item <?= str_contains($current_uri, '/pegawai/') ? 'active' : '' ?>">Manajemen Pegawai</a></li>
+                <li><a href="<?= BASE_URL ?>/modules/admin/pegawai/index.php" class="side-menu__item <?= str_contains($current_uri, '/pegawai/') ? 'active' : '' ?>">Manajemen Pegawai</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/admin/user/index.php" class="side-menu__item <?= str_contains($current_uri, '/user/') ? 'active' : '' ?>">Manajemen User</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/pengajuan/index.php" class="side-menu__item <?= str_contains($current_uri, '/pengajuan/') ? 'active' : '' ?>">Pengajuan Perjalanan</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/spt/index.php" class="side-menu__item <?= str_contains($current_uri, '/spt/') ? 'active' : '' ?>">Manajemen SPT</a></li>

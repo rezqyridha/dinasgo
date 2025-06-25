@@ -1,106 +1,127 @@
 <?php
 require_once __DIR__ . '/../../../config/constants.php';
-require_once BASE_PATH . '/auth/session.php';
-require_once BASE_PATH . '/config/koneksi.php';
+require_once AUTH_PATH . '/session.php';
+require_once CONFIG_PATH . '/koneksi.php';
 
-$pageTitle = 'Tambah Pengajuan Perjalanan';
+$pageTitle = 'Tambah Pengajuan Perjalanan Dinas';
 
+// 🔒 Hanya role pegawai
 if ($_SESSION['role'] !== 'pegawai') {
-    header("Location: index.php?msg=unauthorized");
+    header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-$id_pegawai = $_SESSION['user_id'];
-$error = '';
+$id_user = $_SESSION['id_user'];
 
+// 🆔 Ambil ID Pegawai dari user login
+$stmt = $conn->prepare("SELECT id FROM pegawai WHERE id_user = ?");
+$stmt->bind_param("i", $id_user);
+$stmt->execute();
+$stmt->bind_result($id_pegawai);
+$stmt->fetch();
+$stmt->close();
+
+// Cek validitas
+if (!$id_pegawai) {
+    header("Location: index.php?msg=invalid&obj=pengajuan");
+    exit;
+}
+
+// Proses submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $tujuan = trim($_POST['tujuan']);
-    $keperluan = trim($_POST['keperluan']);
-    $tgl_berangkat = $_POST['tgl_berangkat'] ?? '';
-    $tgl_kembali = $_POST['tgl_kembali'] ?? '';
+    $tujuan    = trim($_POST['tujuan'] ?? '');
+    $keperluan = trim($_POST['keperluan'] ?? '');
+    $berangkat = $_POST['tanggal_berangkat'] ?? '';
+    $kembali   = $_POST['tanggal_kembali'] ?? '';
+    $biaya     = floatval($_POST['estimasi_biaya'] ?? 0);
 
-    if ($tujuan === '' || $keperluan === '' || !$tgl_berangkat || !$tgl_kembali) {
-        header("Location: add.php?msg=kosong");
+    // Validasi
+    if ($tujuan === '' || $keperluan === '' || !$berangkat || !$kembali || $biaya <= 0) {
+        header("Location: add.php?msg=kosong&obj=pengajuan");
         exit;
     }
 
-    // Cek duplikat pengajuan pada tanggal berangkat yang sama
-    $cek = $conn->prepare("SELECT id FROM pengajuan_perjalanan WHERE id_pegawai = ? AND tgl_berangkat = ? AND tujuan = ?");
-    $cek->bind_param("iss", $id_pegawai, $tgl_berangkat, $tujuan);
-    $cek->execute();
-    $cek->store_result();
-
-    if ($cek->num_rows > 0) {
-        header("Location: add.php?msg=duplicate");
-        exit;
-    }
-    $cek->close();
-
-    // Simpan pengajuan
-    $stmt = $conn->prepare("INSERT INTO pengajuan_perjalanan (id_pegawai, tujuan, keperluan, tgl_berangkat, tgl_kembali, tanggal_pengajuan, status) VALUES (?, ?, ?, ?, ?, NOW(), 'diajukan')");
-    $stmt->bind_param("issss", $id_pegawai, $tujuan, $keperluan, $tgl_berangkat, $tgl_kembali);
+    $stmt = $conn->prepare("INSERT INTO pengajuan_perjalanan (id_pegawai, tujuan, tanggal_berangkat, tanggal_kembali, keperluan, estimasi_biaya) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("issssd", $id_pegawai, $tujuan, $berangkat, $kembali, $keperluan, $biaya);
 
     if ($stmt->execute()) {
-        header("Location: index.php?msg=added");
-        exit;
+        header("Location: index.php?msg=added&obj=pengajuan");
     } else {
-        header("Location: add.php?msg=failed");
-        exit;
+        header("Location: index.php?msg=failed&obj=pengajuan");
     }
+    exit;
 }
+
+require_once LAYOUTS_PATH . '/head.php';
+require_once LAYOUTS_PATH . '/header.php';
+require_once LAYOUTS_PATH . '/sidebar.php';
+require_once LAYOUTS_PATH . '/topbar.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="id">
-<?php include_once BASE_PATH . '/layouts/head.php'; ?>
-
-<body>
-    <div class="page">
-        <?php
-        include_once BASE_PATH . '/layouts/header.php';
-        include_once BASE_PATH . '/layouts/topbar.php';
-        include_once BASE_PATH . '/layouts/sidebar.php';
-        ?>
-
-        <div class="main-content app-content">
-            <div class="container-fluid">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
-                </div>
-
-                <div class="card custom-card">
-                    <div class="card-body">
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label class="form-label">Tujuan</label>
-                                <input type="text" name="tujuan" class="form-control" placeholder="Contoh: Jakarta" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Keperluan</label>
-                                <textarea name="keperluan" class="form-control" rows="3" placeholder="Contoh: Rapat koordinasi" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Tanggal Berangkat</label>
-                                <input type="date" name="tgl_berangkat" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Tanggal Kembali</label>
-                                <input type="date" name="tgl_kembali" class="form-control" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary">Ajukan</button>
-                            <a href="index.php" class="btn btn-secondary">Batal</a>
-                        </form>
+<div class="main-content app-content">
+    <div class="container-fluid">
+        <div class="card custom-card mt-5 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-title mb-0">Form Tambah Pengajuan</div>
+                <a href="index.php" class="btn btn-sm btn-dark"><i class="fe fe-arrow-left me-1"></i> Kembali</a>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="tujuan" class="form-label">Tujuan</label>
+                        <input type="text" name="tujuan" id="tujuan" class="form-control" required placeholder="Contoh: Jakarta, Bandung">
                     </div>
-                </div>
+                    <div class="mb-3">
+                        <label for="keperluan" class="form-label">Keperluan</label>
+                        <textarea name="keperluan" id="keperluan" class="form-control" rows="3" required placeholder="Jelaskan maksud perjalanan"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-6">
+                            <label for="tanggal_berangkat" class="form-label">Tanggal Berangkat</label>
+                            <input type="date" name="tanggal_berangkat" id="tanggal_berangkat" class="form-control" required>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label for="tanggal_kembali" class="form-label">Tanggal Kembali</label>
+                            <input type="date" name="tanggal_kembali" id="tanggal_kembali" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estimasi_biaya_display" class="form-label">Estimasi Biaya (Rp)</label>
+                        <input type="text" id="estimasi_biaya_display" class="form-control" placeholder="Contoh: Rp 1.000.000" required>
+                        <input type="hidden" name="estimasi_biaya" id="estimasi_biaya">
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary"><i class="fe fe-save me-1"></i> Simpan</button>
+                        <a href="index.php" class="btn btn-secondary">Batal</a>
+                    </div>
+                </form>
             </div>
         </div>
-
-        <?php
-        include_once BASE_PATH . '/layouts/footer.php';
-        include_once BASE_PATH . '/layouts/scripts.php';
-        ?>
     </div>
-</body>
+</div>
 
-</html>
+<?php
+require_once LAYOUTS_PATH . '/footer.php';
+require_once LAYOUTS_PATH . '/scripts.php';
+?>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const displayInput = document.getElementById("estimasi_biaya_display");
+        const hiddenInput = document.getElementById("estimasi_biaya");
+
+        function formatRupiah(angka) {
+            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function cleanInput(val) {
+            return val.replace(/[^0-9]/g, '');
+        }
+
+        displayInput.addEventListener("input", function() {
+            let raw = cleanInput(this.value);
+            hiddenInput.value = raw;
+            this.value = raw ? "Rp " + formatRupiah(raw) : "";
+        });
+    });
+</script>

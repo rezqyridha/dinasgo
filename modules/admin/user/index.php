@@ -76,18 +76,24 @@ function getRoleBadgeClass($role)
                                             <td><span class="badge <?= getRoleBadgeClass($row['role']) ?>"><?= ucfirst($row['role']) ?></span></td>
                                             <td><span class="badge <?= $row['status'] === 'aktif' ? 'bg-success' : 'bg-danger' ?>"><?= ucfirst($row['status']) ?></span></td>
                                             <td class="text-center">
-                                                <div class="btn-group btn-group-sm">
-                                                    <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-warning" title="Edit"><i class="fe fe-edit"></i></a>
+                                                <div class="btn-list d-flex justify-content-center">
+                                                    <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning me-1" title="Edit">
+                                                        <i class="fe fe-edit"></i>
+                                                    </a>
                                                     <?php if ($row['id'] != $currentId): ?>
                                                         <form action="reset.php" method="POST" class="d-inline">
                                                             <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                                            <button type="submit" onclick="resetPassword(this.form); return false;" class="btn btn-secondary" title="Reset Password"><i class="fe fe-refresh-cw"></i></button>
+                                                            <button type="submit" onclick="resetPassword(this.form); return false;" class="btn btn-sm btn-secondary me-1" title="Reset Password">
+                                                                <i class="fe fe-refresh-cw"></i>
+                                                            </button>
                                                         </form>
-                                                        <button onclick="confirmDelete('delete.php?id=<?= $row['id'] ?>')" class="btn btn-danger" title="Hapus"><i class="fe fe-trash-2"></i></button>
-                                                    <?php else: ?>
-                                                        <span class="badge bg-light text-dark border">Diri Sendiri</span>
-                                                    <?php endif; ?>
+                                                        <button onclick="confirmDelete('delete.php?id=<?= $row['id'] ?>')" class="btn btn-sm btn-danger" title="Hapus">
+                                                            <i class="fe fe-trash-2"></i>
+                                                        </button>
                                                 </div>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-dark border d-flex align-items-center justify-content-center" style="height:32px; min-width:90px;">Diri Sendiri</span>
+                                            <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endwhile; ?>

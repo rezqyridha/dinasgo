@@ -1,121 +1,146 @@
 <?php
 require_once __DIR__ . '/../../../config/constants.php';
-require_once BASE_PATH . '/auth/session.php';
-require_once BASE_PATH . '/config/koneksi.php';
+require_once CONFIG_PATH . '/koneksi.php';
+require_once AUTH_PATH . '/session.php';
 
-$pageTitle = 'Edit Pengajuan Perjalanan';
-$id = $_GET['id'] ?? null;
+$pageTitle = 'Edit Pengajuan';
 $role = $_SESSION['role'];
-$isPegawai = $role === 'pegawai';
+$id_user = $_SESSION['id_user'];
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header("Location: index.php?msg=invalid");
+if (!in_array($role, ['admin', 'pegawai'])) {
+    header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-$query = $conn->prepare("SELECT * FROM pengajuan_perjalanan WHERE id = ?");
-$query->bind_param("i", $id);
-$query->execute();
-$result = $query->get_result();
-$data = $result->fetch_assoc();
+$id = (int)($_GET['id'] ?? 0);
+if ($id <= 0) {
+    header("Location: index.php?msg=invalid&obj=pengajuan");
+    exit;
+}
+
+// Ambil ID Pegawai jika login sebagai pegawai
+if ($role === 'pegawai') {
+    $stmt = $conn->prepare("SELECT id FROM pegawai WHERE id_user = ?");
+    $stmt->bind_param("i", $id_user);
+    $stmt->execute();
+    $stmt->bind_result($id_pegawai);
+    $stmt->fetch();
+    $stmt->close();
+} else {
+    $id_pegawai = null; // admin bisa akses semua
+}
+
+// Ambil data lama
+$sql = "
+    SELECT p.*, pg.nama AS nama_pegawai 
+    FROM pengajuan_perjalanan p 
+    JOIN pegawai pg ON p.id_pegawai = pg.id
+    WHERE p.id = ?
+";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$data = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
 if (!$data) {
-    header("Location: index.php?msg=notfound");
+    header("Location: index.php?msg=invalid&obj=pengajuan");
     exit;
 }
 
-if ($data['status'] !== 'diajukan') {
-    echo "<script>alert('Data tidak dapat diubah. Status saat ini tidak valid.');location.href='index.php';</script>";
+// Validasi: Pegawai hanya bisa edit miliknya
+if ($role === 'pegawai' && $data['id_pegawai'] != $id_pegawai) {
+    header("Location: index.php?msg=unauthorized&obj=pengajuan");
     exit;
 }
 
-// Proteksi: hanya pegawai pemilik pengajuan yang bisa edit
-if ($isPegawai && $data['id_pegawai'] != $_SESSION['user_id']) {
-    header("Location: index.php?msg=forbidden");
+// Tidak boleh edit jika bukan status diajukan (khusus pegawai)
+if ($role === 'pegawai' && $data['status'] !== 'diajukan') {
+    header("Location: index.php?msg=locked&obj=pengajuan");
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($isPegawai) {
-        $tanggal_berangkat = $_POST['tanggal_berangkat'] ?? '';
-        $tanggal_kembali = $_POST['tanggal_kembali'] ?? '';
-        $tujuan = trim($_POST['tujuan'] ?? '');
-        $keperluan = trim($_POST['keperluan'] ?? '');
+    $tujuan           = trim($_POST['tujuan']);
+    $keperluan        = trim($_POST['keperluan']);
+    $tanggal_berangkat = $_POST['tanggal_berangkat'] ?? '';
+    $tanggal_kembali   = $_POST['tanggal_kembali'] ?? '';
+    $estimasi_biaya   = str_replace(['Rp', '.', ','], '', $_POST['estimasi_biaya'] ?? '0');
 
-        $stmt = $conn->prepare("UPDATE pengajuan_perjalanan SET tanggal_berangkat = ?, tanggal_kembali = ?, tujuan = ?, keperluan = ? WHERE id = ?");
-        $stmt->bind_param("ssssi", $tanggal_berangkat, $tanggal_kembali, $tujuan, $keperluan, $id);
-        $stmt->execute();
-        header("Location: index.php?msg=updated");
-        exit;
-    } else {
-        $status = $_POST['status'] ?? '';
-        if (!in_array($status, ['diajukan', 'disetujui', 'ditolak', 'selesai'])) {
-            header("Location: index.php?msg=invalid");
-            exit;
-        }
-
-        $stmt = $conn->prepare("UPDATE pengajuan_perjalanan SET status = ? WHERE id = ?");
-        $stmt->bind_param("si", $status, $id);
-        $stmt->execute();
-        header("Location: index.php?msg=updated");
+    if ($tujuan === '' || $keperluan === '' || !$tanggal_berangkat || !$tanggal_kembali) {
+        header("Location: edit.php?id=$id&msg=kosong&obj=pengajuan");
         exit;
     }
+
+    $stmt = $conn->prepare("
+        UPDATE pengajuan_perjalanan
+        SET tujuan=?, keperluan=?, tanggal_berangkat=?, tanggal_kembali=?, estimasi_biaya=?
+        WHERE id=?
+    ");
+    $stmt->bind_param("ssssdi", $tujuan, $keperluan, $tanggal_berangkat, $tanggal_kembali, $estimasi_biaya, $id);
+
+    if ($stmt->execute()) {
+        header("Location: index.php?msg=updated&obj=pengajuan");
+    } else {
+        header("Location: edit.php?id=$id&msg=failed&obj=pengajuan");
+    }
+    exit;
 }
+
+include_once LAYOUTS_PATH . '/head.php';
+include_once LAYOUTS_PATH . '/header.php';
+include_once LAYOUTS_PATH . '/sidebar.php';
+include_once LAYOUTS_PATH . '/topbar.php';
 ?>
 
-<!-- Gunakan layout modular untuk form -->
-<!DOCTYPE html>
-<html lang="id">
-<?php include_once BASE_PATH . '/layouts/head.php'; ?>
-
-<body>
-    <div class="page">
-        <?php include_once BASE_PATH . '/layouts/header.php'; ?>
-        <?php include_once BASE_PATH . '/layouts/topbar.php'; ?>
-        <?php include_once BASE_PATH . '/layouts/sidebar.php'; ?>
-
-        <div class="main-content app-content">
-            <div class="container-fluid">
-                <h4>Edit Pengajuan</h4>
-
+<div class="main-content app-content">
+    <div class="container-fluid">
+        <div class="card custom-card mt-5 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-title mb-0">Edit Pengajuan Perjalanan</div>
+                <a href="index.php" class="btn btn-sm btn-dark"><i class="fe fe-arrow-left me-1"></i> Kembali</a>
+            </div>
+            <div class="card-body">
                 <form method="POST">
-                    <?php if ($isPegawai): ?>
-                        <div class="mb-3">
-                            <label>Tanggal Berangkat</label>
-                            <input type="date" class="form-control" name="tanggal_berangkat" value="<?= $data['tanggal_berangkat'] ?>" required>
+                    <div class="mb-3">
+                        <label for="tujuan" class="form-label">Tujuan Perjalanan</label>
+                        <input type="text" name="tujuan" id="tujuan" class="form-control" value="<?= htmlspecialchars($data['tujuan']) ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="keperluan" class="form-label">Keperluan</label>
+                        <textarea name="keperluan" id="keperluan" rows="3" class="form-control" required><?= htmlspecialchars($data['keperluan']) ?></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="tanggal_berangkat" class="form-label">Tanggal Berangkat</label>
+                            <input type="date" name="tanggal_berangkat" id="tanggal_berangkat" class="form-control" value="<?= $data['tanggal_berangkat'] ?>" required>
                         </div>
-                        <div class="mb-3">
-                            <label>Tanggal Kembali</label>
-                            <input type="date" class="form-control" name="tanggal_kembali" value="<?= $data['tanggal_kembali'] ?>" required>
+                        <div class="col-md-6 mb-3">
+                            <label for="tanggal_kembali" class="form-label">Tanggal Kembali</label>
+                            <input type="date" name="tanggal_kembali" id="tanggal_kembali" class="form-control" value="<?= $data['tanggal_kembali'] ?>" required>
                         </div>
-                        <div class="mb-3">
-                            <label>Tujuan</label>
-                            <input type="text" class="form-control" name="tujuan" value="<?= htmlspecialchars($data['tujuan']) ?>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label>Keperluan</label>
-                            <textarea name="keperluan" class="form-control" required><?= htmlspecialchars($data['keperluan']) ?></textarea>
-                        </div>
-                    <?php else: ?>
-                        <div class="mb-3">
-                            <label>Status</label>
-                            <select name="status" class="form-control" required>
-                                <?php foreach (['diajukan', 'disetujui', 'ditolak', 'selesai'] as $s): ?>
-                                    <option value="<?= $s ?>" <?= $data['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    <?php endif; ?>
-
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                    <a href="index.php" class="btn btn-secondary">Batal</a>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estimasi_biaya" class="form-label">Estimasi Biaya (Rp)</label>
+                        <input type="text" name="estimasi_biaya" id="estimasi_biaya" class="form-control" value="<?= number_format($data['estimasi_biaya'], 0, ',', '.') ?>">
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fe fe-save me-1"></i> Simpan Perubahan</button>
                 </form>
             </div>
         </div>
-
-        <?php include_once BASE_PATH . '/layouts/footer.php'; ?>
-        <?php include_once BASE_PATH . '/layouts/scripts.php'; ?>
     </div>
-</body>
+</div>
 
-</html>
+<script>
+    // Format input estimasi biaya saat diketik
+    const estimasiInput = document.getElementById('estimasi_biaya');
+    estimasiInput.addEventListener('input', function() {
+        let angka = this.value.replace(/\D/g, '');
+        this.value = new Intl.NumberFormat('id-ID').format(angka);
+    });
+</script>
+
+<?php
+include_once LAYOUTS_PATH . '/footer.php';
+include_once LAYOUTS_PATH . '/scripts.php';
+?>
