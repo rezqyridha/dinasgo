@@ -1,46 +1,48 @@
 <?php
-require_once '../config/koneksi.php';
-require_once '../config/constants.php';
+require_once __DIR__ . '/../config/constants.php';
+require_once CONFIG_PATH . '/koneksi.php';
 session_start();
 
 // Redirect jika sudah login
-if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
+if (isset($_SESSION['id_user']) && isset($_SESSION['role'])) {
     header("Location: " . BASE_URL . "/modules/" . $_SESSION['role'] . "/dashboard.php");
     exit;
 }
 
-// Proses login jika form dikirim
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
     if ($username === '' || $password === '') {
-        $error = "Username dan Password wajib diisi.";
-    } else {
-        $stmt = $conn->prepare("SELECT id, nama, username, password, role FROM user WHERE username = ?");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        header("Location: login.php");
+        exit;
+    }
 
-        if ($result && $result->num_rows === 1) {
-            $user = $result->fetch_assoc();
+    $stmt = $conn->prepare("SELECT id, nama, username, password, role FROM user WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-            // Catatan: gunakan password_verify jika sudah hash sementara saat pengujian tidak di hash
-            if ($password === $user['password']) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['nama'] = $user['nama'];
-                $_SESSION['role'] = $user['role'];
+    if ($result && $result->num_rows === 1) {
+        $user = $result->fetch_assoc();
 
-                header("Location: " . BASE_URL . "/modules/" . $user['role'] . "/dashboard.php");
-                exit;
-            } else {
-                $error = "Password salah.";
-            }
+        // Gunakan password_verify() jika sudah hash, sementara disamakan
+        if ($password === $user['password']) {
+            $_SESSION['id_user']  = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['nama']     = $user['nama'];
+            $_SESSION['role']     = $user['role'];
+
+            header("Location: " . BASE_URL . "/modules/" . $user['role'] . "/dashboard.php");
+            exit;
         } else {
-            $error = "Username tidak ditemukan.";
+            header("Location: login.php");
+            exit;
         }
+    } else {
+        header("Location: login.php");
+        exit;
     }
 }
 ?>

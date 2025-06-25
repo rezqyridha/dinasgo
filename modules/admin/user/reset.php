@@ -8,16 +8,15 @@ if ($_SESSION['role'] !== 'admin') {
     exit;
 }
 
-$id       = intval($_GET['id'] ?? 0);
+$id       = intval($_POST['id'] ?? 0);
 $loginId  = $_SESSION['id_user'] ?? 0;
 
-// Cegah hapus diri sendiri
-if ($id === $loginId) {
-    header("Location: index.php?msg=locked");
+if ($id <= 0 || $id === $loginId) {
+    header("Location: index.php?msg=invalid");
     exit;
 }
 
-// Validasi data ada
+// Pastikan user ada
 $cek = $conn->prepare("SELECT id FROM user WHERE id = ?");
 $cek->bind_param("i", $id);
 $cek->execute();
@@ -30,12 +29,15 @@ if ($cek->num_rows === 0) {
 }
 $cek->close();
 
-// Eksekusi hapus
-$stmt = $conn->prepare("DELETE FROM user WHERE id = ?");
-$stmt->bind_param("i", $id);
+// Reset password ke default
+$password_default = 'user123';
+$hash = password_hash($password_default, PASSWORD_DEFAULT);
 
-if ($stmt->execute() && $stmt->affected_rows > 0) {
-    header("Location: index.php?msg=deleted");
+$stmt = $conn->prepare("UPDATE user SET password = ? WHERE id = ?");
+$stmt->bind_param("si", $password_default, $id);
+
+if ($stmt->execute()) {
+    header("Location: index.php?msg=reset");
 } else {
     header("Location: index.php?msg=failed");
 }

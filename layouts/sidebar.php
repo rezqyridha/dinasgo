@@ -1,28 +1,25 @@
 <?php
-
 $role = $_SESSION['role'] ?? 'guest';
 $menuFile = __DIR__ . "/menu_$role.php";
 ?>
-<!-- Sidebar ATAS -->
+
+<!-- Sidebar -->
 <aside class="app-sidebar sticky" id="sidebar">
-    <!-- Start::main-sidebar-header -->
+    <!-- Logo Sidebar -->
     <div class="main-sidebar-header">
-        <a href="<?= BASE_URL ?>/modules/<?= $_SESSION['role'] ?>/dashboard.php" class="header-logo">
-            <img src="<?= BASE_URL ?>/assets/images/brand-logos/PUPR.png" alt="logo sidebar" style="height: 40px; ">
+        <a href="<?= BASE_URL ?>/modules/<?= $role ?>/dashboard.php" class="header-logo">
+            <img src="<?= ASSETS_URL ?>/images/brand-logos/PUPR.png" alt="logo sidebar" style="height: 40px;">
         </a>
     </div>
-    <!-- End::main-sidebar-header -->
 
-
-    <!-- Sidebar Bawah -->
+    <!-- Menu Sidebar -->
     <div class="main-sidebar" id="sidebar-scroll">
-        <?php
-        if (file_exists($menuFile)) {
-            require_once $menuFile;
-        } else {
-            echo "<div class='text-danger p-3'>Menu untuk role <strong>$role</strong> tidak ditemukan.</div>";
-        }
-        ?>
+        <?php if (file_exists($menuFile)): ?>
+            <?php require_once $menuFile; ?>
+        <?php else: ?>
+            <div class='text-danger p-3'>
+                Menu untuk role <strong><?= htmlspecialchars($role) ?></strong> tidak ditemukan.
+            </div>
+        <?php endif; ?>
     </div>
-    <!-- End::main-sidebar -->
 </aside>
