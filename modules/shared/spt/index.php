@@ -1,149 +1,159 @@
 <?php
 require_once __DIR__ . '/../../../config/constants.php';
-require_once BASE_PATH . '/auth/session.php';
-require_once BASE_PATH . '/config/koneksi.php';
+require_once CONFIG_PATH . '/koneksi.php';
+require_once AUTH_PATH . '/session.php';
 
-// echo "Role: " . $_SESSION['role'] . "<br>";
-//echo "Folder: $currentFolder | Modul: $currentModule";
-//exit;
+$pageTitle = 'Daftar Surat Perintah Tugas (SPT)';
+$role = $_SESSION['role'];
+$id_user = $_SESSION['id_user'];
 
-// Proteksi login
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
-    header("Location: " . BASE_URL . "/auth/login.php");
+// Proteksi role
+$canRead = in_array($role, ['admin', 'pegawai', 'atasan']);
+if (!$canRead) {
+    header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-$pageTitle = 'Data Surat Perintah Tugas (SPT)';
-$id_user = $_SESSION['user_id'];
-$role = $_SESSION['role'];
-$isAdmin = ($role === 'admin');
-
-// Query data SPT berdasarkan role
+// Ambil data berdasarkan role
 if ($role === 'pegawai') {
+    $stmt = $conn->prepare("SELECT id FROM pegawai WHERE id_user = ?");
+    $stmt->bind_param("i", $id_user);
+    $stmt->execute();
+    $stmt->bind_result($id_pegawai);
+    $stmt->fetch();
+    $stmt->close();
+
+    $id_pegawai = $id_pegawai ?? 0;
+
     $query = "
-        SELECT s.*, p.id_pegawai, u.nama AS pegawai, a.nama AS penandatangan
-        FROM spt s
-        JOIN pengajuan_perjalanan p ON s.id_pengajuan = p.id
-        JOIN user u ON p.id_pegawai = u.id
-        LEFT JOIN user a ON s.ditandatangani_oleh = a.id
-        WHERE p.id_pegawai = $id_user
-        ORDER BY s.tanggal_spt DESC
-    ";
+        SELECT spt.*, peg.nama AS nama_pegawai, u.nama AS penandatangan
+        FROM spt
+        JOIN pengajuan_perjalanan pp ON spt.id_pengajuan = pp.id
+        JOIN pegawai peg ON pp.id_pegawai = peg.id
+        LEFT JOIN user u ON spt.ditandatangani_oleh = u.id
+        WHERE pp.id_pegawai = ?
+        ORDER BY spt.tanggal_spt DESC";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $id_pegawai);
+    $stmt->execute();
+    $result = $stmt->get_result();
 } else {
     $query = "
-        SELECT s.*, p.id_pegawai, u.nama AS pegawai, a.nama AS penandatangan
-        FROM spt s
-        JOIN pengajuan_perjalanan p ON s.id_pengajuan = p.id
-        JOIN user u ON p.id_pegawai = u.id
-        LEFT JOIN user a ON s.ditandatangani_oleh = a.id
-        ORDER BY s.tanggal_spt DESC
-    ";
+        SELECT spt.*, peg.nama AS nama_pegawai, u.nama AS penandatangan
+        FROM spt
+        JOIN pengajuan_perjalanan pp ON spt.id_pengajuan = pp.id
+        JOIN pegawai peg ON pp.id_pegawai = peg.id
+        LEFT JOIN user u ON spt.ditandatangani_oleh = u.id
+        ORDER BY spt.tanggal_spt DESC";
+    $result = $conn->query($query);
 }
 
-$result = $conn->query($query);
-if (!$result) {
-    die("Gagal mengambil data SPT: " . $conn->error);
-}
+require_once LAYOUTS_PATH . '/head.php';
+require_once LAYOUTS_PATH . '/header.php';
+require_once LAYOUTS_PATH . '/topbar.php';
+require_once LAYOUTS_PATH . '/sidebar.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="id">
-<?php include_once BASE_PATH . '/layouts/head.php'; ?>
+<div class="main-content app-content">
+    <div class="container-fluid">
 
-<body>
-    <div class="page">
-        <?php
-        include_once BASE_PATH . '/layouts/header.php';
-        include_once BASE_PATH . '/layouts/topbar.php';
-        include_once BASE_PATH . '/layouts/sidebar.php';
-        ?>
+        <div class="card custom-card mt-5 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-title mb-0"><?= htmlspecialchars($pageTitle) ?></div>
+                <?php if ($role === 'admin'): ?>
+                    <a href="<?= BASE_URL ?>/modules/admin/spt/add.php" class="btn btn-sm btn-primary">
+                        <i class="fe fe-plus me-1"></i> Tambah SPT
+                    </a>
+                <?php endif; ?>
+            </div>
 
-        <div class="main-content app-content">
-            <div class="container-fluid">
-
-                <!-- Page Header -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mt-3 mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
-                    <?php if ($isAdmin): ?>
-                        <a href="add.php" class="btn btn-primary mt-3">
-                            <i class="fas fa-plus"></i> Tambah SPT
-                        </a>
-                    <?php endif; ?>
+            <div class="card-body">
+                <div class="mb-3 d-flex justify-content-end">
+                    <input type="text" id="searchBox" class="form-control w-25" placeholder="Cari SPT...">
                 </div>
 
-                <!-- Tabel Data SPT -->
-                <div class="card custom-card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover text-nowrap">
-                                <thead class="table-light">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-striped align-middle mb-0" id="tabel-spt">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Nomor SPT</th>
+                                <th>Nama Pegawai</th>
+                                <th>Tanggal SPT</th>
+                                <th>Maksud Perjalanan</th>
+                                <th>Lama</th>
+                                <th>Transportasi</th>
+                                <th>Status</th>
+                                <th>Ditandatangani Oleh</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($result && $result->num_rows > 0): ?>
+                                <?php $no = 1;
+                                while ($row = $result->fetch_assoc()): ?>
+                                    <?php
+                                    $status = $row['status'];
+                                    $badgeClass = match ($status) {
+                                        'draft' => 'bg-secondary',
+                                        'ditandatangani' => 'bg-success',
+                                        'dibatalkan' => 'bg-danger',
+                                        default => 'bg-light'
+                                    };
+                                    ?>
                                     <tr>
-                                        <th>No</th>
-                                        <th>Nomor SPT</th>
-                                        <th>Nama Pegawai</th>
-                                        <th>Tanggal SPT</th>
-                                        <th>Maksud Perjalanan</th>
-                                        <th>Status</th>
-                                        <th>Penandatangan</th>
-                                        <th>Aksi</th>
+                                        <td><?= $no++ ?></td>
+                                        <td><?= htmlspecialchars($row['nomor_spt']) ?></td>
+                                        <td><?= htmlspecialchars($row['nama_pegawai']) ?></td>
+                                        <td><?= date('d-m-Y', strtotime($row['tanggal_spt'])) ?></td>
+                                        <td><?= htmlspecialchars($row['maksud_perjalanan']) ?></td>
+                                        <td><?= htmlspecialchars($row['lama_perjalanan']) ?></td>
+                                        <td><?= htmlspecialchars($row['transportasi']) ?></td>
+                                        <td><span class="badge <?= $badgeClass ?>"><?= ucfirst($status) ?></span></td>
+                                        <td><?= $row['penandatangan'] ?? '<i class="text-muted">-</i>' ?></td>
+                                        <td class="text-center">
+                                            <div class="btn-list d-flex justify-content-center">
+                                                <?php if ($row['status'] !== 'dibatalkan'): ?>
+                                                    <a href="<?= BASE_URL ?>/modules/admin/spt/cetak.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info me-1" title="Cetak" target="_blank">
+                                                        <i class="fe fe-printer"></i>
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if ($role === 'admin' && $status === 'draft'): ?>
+                                                    <a href="<?= BASE_URL ?>/modules/admin/spt/edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning me-1" title="Edit">
+                                                        <i class="fe fe-edit"></i>
+                                                    </a>
+                                                    <button onclick="confirmDelete('<?= BASE_URL ?>/modules/admin/spt/delete.php?id=<?= $row['id'] ?>')" class="btn btn-sm btn-danger" title="Hapus">
+                                                        <i class="fe fe-trash-2"></i>
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if ($result->num_rows > 0): ?>
-                                        <?php $no = 1;
-                                        while ($row = $result->fetch_assoc()): ?>
-                                            <tr>
-                                                <td><?= $no++ ?></td>
-                                                <td><?= htmlspecialchars($row['nomor_spt']) ?></td>
-                                                <td>
-                                                    <?= htmlspecialchars($row['pegawai']) ?>
-                                                    <?= ($row['id_pegawai'] == $id_user) ? ' <span class="text-muted">(Milik Anda)</span>' : '' ?>
-                                                </td>
-                                                <td><?= date('d-m-Y', strtotime($row['tanggal_spt'])) ?></td>
-                                                <td><?= htmlspecialchars($row['maksud_perjalanan']) ?></td>
-                                                <td>
-                                                    <?php
-                                                    $badge = match ($row['status']) {
-                                                        'draft' => 'secondary',
-                                                        'ditandatangani' => 'success',
-                                                        'dibatalkan' => 'danger',
-                                                        default => 'dark',
-                                                    };
-                                                    echo "<span class='badge bg-$badge'>" . htmlspecialchars($row['status']) . "</span>";
-                                                    ?>
-                                                </td>
-                                                <td><?= htmlspecialchars($row['penandatangan'] ?? '-') ?></td>
-                                                <td>
-                                                    <a href="view.php?id=<?= $row['id'] ?>" class="btn btn-info btn-sm">Detail</a>
-                                                    <?php if ($isAdmin && $row['status'] === 'draft'): ?>
-                                                        <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-                                                        <a href="#" onclick="confirmDelete('delete.php?id=<?= $row['id'] ?>')" class="btn btn-danger btn-sm">Hapus</a>
-                                                    <?php endif; ?>
-                                                    <?php if (in_array($role, ['admin', 'pegawai', 'bendahara'])): ?>
-                                                        <a href="cetak.php?id=<?= $row['id'] ?>" class="btn btn-success btn-sm" target="_blank">Cetak</a>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                        <?php endwhile; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="8" class="text-center">Data SPT tidak tersedia.</td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted">Belum ada data SPT.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
-
             </div>
         </div>
 
-        <?php
-        include_once BASE_PATH . '/layouts/footer.php';
-        include_once BASE_PATH . '/layouts/scripts.php';
-        ?>
     </div>
-</body>
+</div>
 
-</html>
+<?php
+require_once LAYOUTS_PATH . '/footer.php';
+require_once LAYOUTS_PATH . '/scripts.php';
+?>
+
+<script>
+    document.getElementById("searchBox").addEventListener("keyup", function() {
+        const filter = this.value.toLowerCase();
+        document.querySelectorAll("#tabel-spt tbody tr").forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+        });
+    });
+</script>

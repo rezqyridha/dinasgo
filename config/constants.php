@@ -15,6 +15,7 @@ define('MODULES_PATH', ROOT_PATH . '/modules');
 define('LAYOUTS_PATH', ROOT_PATH . '/layouts');
 define('CONFIG_PATH', ROOT_PATH . '/config');
 define('AUTH_PATH', ROOT_PATH . '/auth');
+define('FPDF_PATH', ROOT_PATH . '/fpdf');
 
 // Nama sistem
 define('APP_NAME', 'Sistem Manajemen DinasGo');

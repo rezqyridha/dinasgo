@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `kepala` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.kepala: ~0 rows (approximately)
+-- Dumping data for table dinasgo.kepala: ~1 rows (approximately)
 INSERT INTO `kepala` (`id`, `nama`, `nip`, `jabatan`, `ttd_gambar`, `tahun`, `created_at`) VALUES
 	(1, 'Dr. Ir. Sutrisno, MT', '196504011993031001', 'Kepala Balai Wilayah Sungai', 'ttd_sutrisno.png', '2025', '2025-06-25 07:21:21');
 
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS `pengajuan_perjalanan` (
   CONSTRAINT `pengajuan_perjalanan_ibfk_1` FOREIGN KEY (`id_pegawai`) REFERENCES `pegawai` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.pengajuan_perjalanan: ~4 rows (approximately)
+-- Dumping data for table dinasgo.pengajuan_perjalanan: ~5 rows (approximately)
 INSERT INTO `pengajuan_perjalanan` (`id`, `id_pegawai`, `tujuan`, `tanggal_berangkat`, `tanggal_kembali`, `keperluan`, `estimasi_biaya`, `status`, `diverifikasi_oleh`, `catatan_verifikasi`, `created_at`) VALUES
 	(1, 1, 'Yogyakarta', '2025-07-10', '2025-07-12', 'Kunjungan lapangan ke proyek sungai', 2500000.00, 'diajukan', NULL, NULL, '2025-06-25 07:21:21'),
 	(2, 2, 'Surabaya', '2025-08-01', '2025-08-04', 'Monitoring dan pelaporan realisasi anggaran', 3100000.00, 'disetujui', NULL, NULL, '2025-06-25 07:21:21'),
@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS `persetujuan` (
   CONSTRAINT `persetujuan_ibfk_2` FOREIGN KEY (`id_verifikator`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.persetujuan: ~3 rows (approximately)
+-- Dumping data for table dinasgo.persetujuan: ~4 rows (approximately)
 INSERT INTO `persetujuan` (`id`, `id_pengajuan`, `id_verifikator`, `catatan`, `status`, `tanggal_persetujuan`) VALUES
 	(1, 1, 3, 'Disetujui karena penting', 'disetujui', '2025-07-01'),
 	(2, 2, 3, 'Lanjutkan segera', 'disetujui', '2025-07-25'),
@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS `rencana_perjalanan` (
   CONSTRAINT `rencana_perjalanan_ibfk_1` FOREIGN KEY (`id_pegawai`) REFERENCES `pegawai` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.rencana_perjalanan: ~0 rows (approximately)
+-- Dumping data for table dinasgo.rencana_perjalanan: ~3 rows (approximately)
 INSERT INTO `rencana_perjalanan` (`id`, `id_pegawai`, `tujuan`, `tanggal_berangkat`, `tanggal_kembali`, `jenis_transportasi`, `tujuan_kegiatan`, `status`) VALUES
 	(1, 1, 'Yogyakarta', '2025-07-10', '2025-07-12', 'Pesawat', 'Kunjungan lapangan', 'direncanakan'),
 	(2, 2, 'Surabaya', '2025-08-01', '2025-08-04', 'Kereta', 'Monitoring proyek air bersih', 'diajukan'),
@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS `spt` (
   KEY `fk_spt_user` (`ditandatangani_oleh`),
   CONSTRAINT `fk_spt_pengajuan` FOREIGN KEY (`id_pengajuan`) REFERENCES `pengajuan_perjalanan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_spt_user` FOREIGN KEY (`ditandatangani_oleh`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table dinasgo.spt: ~3 rows (approximately)
 INSERT INTO `spt` (`id`, `id_pengajuan`, `nomor_spt`, `tanggal_spt`, `maksud_perjalanan`, `lama_perjalanan`, `transportasi`, `status`, `ditandatangani_oleh`, `created_at`, `updated_at`) VALUES
@@ -306,7 +306,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.user: ~6 rows (approximately)
+-- Dumping data for table dinasgo.user: ~4 rows (approximately)
 INSERT INTO `user` (`id`, `nama`, `username`, `password`, `role`, `status`) VALUES
 	(1, 'Admin Utama', 'admin01', 'admin123', 'admin', 'aktif'),
 	(2, 'Rina Ayu', 'pegawai01', 'user123', 'pegawai', 'aktif'),
