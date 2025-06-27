@@ -5,7 +5,7 @@ require_once CONFIG_PATH . '/koneksi.php';
 
 $pageTitle = 'Tambah Pengajuan Perjalanan Dinas';
 
-// 🔒 Hanya role pegawai
+//  Hanya role pegawai
 if ($_SESSION['role'] !== 'pegawai') {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
@@ -63,7 +63,6 @@ require_once LAYOUTS_PATH . '/topbar.php';
         <div class="card custom-card mt-5 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div class="card-title mb-0">Form Tambah Pengajuan</div>
-                <a href="index.php" class="btn btn-sm btn-dark"><i class="fe fe-arrow-left me-1"></i> Kembali</a>
             </div>
             <div class="card-body">
                 <form method="POST">

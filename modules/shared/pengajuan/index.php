@@ -53,7 +53,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         <div class="card custom-card mt-5 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div class="card-title mb-0"><?= htmlspecialchars($pageTitle) ?></div>
-                <?php if ($role === 'pegawai' || $role === 'admin'): ?>
+                <?php if ($role === 'pegawai'): ?>
                     <a href="add.php" class="btn btn-sm btn-primary"><i class="fe fe-plus me-1"></i> Tambah Pengajuan</a>
                 <?php endif; ?>
             </div>

@@ -71,7 +71,6 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         <div class="card custom-card mt-5 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div class="card-title mb-0">Tambah Pegawai</div>
-                <a href="index.php" class="btn btn-sm btn-dark"><i class="fe fe-arrow-left me-1"></i> Kembali</a>
             </div>
 
             <div class="card-body">

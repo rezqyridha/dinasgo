@@ -98,6 +98,13 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                         <td>: <strong>Rp <?= number_format($rincian['jumlah_total'], 0, ',', '.') ?></strong></td>
                     </tr>
                 </table>
+                <div class="text-end">
+                    <?php if (in_array($role, ['admin', 'bendahara'])): ?>
+                        <a href="cetak.php?id=<?= $data['id'] ?>" target="_blank" class="btn btn-primary ms-2">
+                            <i class="fe fe-printer me-1"></i> Cetak Bukti
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 

@@ -121,7 +121,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                         <select name="id_pengajuan" id="id_pengajuan" class="form-select" required>
                             <option value="">-- Pilih Pengajuan --</option>
                             <?php while ($row = $pengajuanList->fetch_assoc()): ?>
-                                <option value="<?= $row['id'] ?>"><?= $row['nama'] ?> - <?= $row['tujuan'] ?> (<?= $row['tanggal_berangkat'] ?>)</option>
+                                <option value="<?= $row['id'] ?>"><?= $row['nama'] ?> - Tujuan Ke(<?= $row['tujuan'] ?>) - (<?= $row['tanggal_berangkat'] ?>)</option>
                             <?php endwhile; ?>
                         </select>
                     </div>

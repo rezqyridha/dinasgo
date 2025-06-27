@@ -95,7 +95,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                     <!-- ✅ Info Pengajuan (Readonly) -->
                     <div class="mb-3">
                         <label class="form-label">Pengajuan</label>
-                        <input type="text" class="form-control" value="<?= $peng['nama'] ?> - <?= $peng['tujuan'] ?> (<?= date('d-m-Y', strtotime($peng['tanggal_berangkat'])) ?>)" readonly>
+                        <input type="text" class="form-control" value="<?= $peng['nama'] ?> - Tujuan Ke(<?= $peng['tujuan'] ?>) - (<?= date('d-m-Y', strtotime($peng['tanggal_berangkat'])) ?>) " readonly>
                         <input type="hidden" name="id_pengajuan" value="<?= $id_pengajuan ?>">
                     </div>
 

@@ -97,7 +97,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                             <option value="">-- Pilih Pengajuan --</option>
                             <?php while ($row = $pengajuan->fetch_assoc()): ?>
                                 <option value="<?= $row['id'] ?>" <?= $input['id_pengajuan'] == $row['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($row['nama']) ?> - <?= htmlspecialchars($row['tujuan']) ?> (<?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?>)
+                                    <?= htmlspecialchars($row['nama']) ?> - Tujuan Ke(<?= htmlspecialchars($row['tujuan']) ?>) - (<?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?>) - <?= htmlspecialchars($row['keperluan']) ?>
                                 </option>
                             <?php endwhile; ?>
                         </select>

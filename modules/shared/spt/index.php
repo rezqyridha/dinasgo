@@ -85,14 +85,15 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                 <th>Transportasi</th>
                                 <th>Status</th>
                                 <th>Ditandatangani Oleh</th>
-                                <th class="text-center">Aksi</th>
+                                <?php if ($role !== 'pegawai'): ?>
+                                    <th class="text-center">Aksi</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if ($result && $result->num_rows > 0): ?>
                                 <?php $no = 1;
-                                while ($row = $result->fetch_assoc()): ?>
-                                    <?php
+                                while ($row = $result->fetch_assoc()):
                                     $status = $row['status'];
                                     $badgeClass = match ($status) {
                                         'draft' => 'bg-secondary',
@@ -100,7 +101,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                         'dibatalkan' => 'bg-danger',
                                         default => 'bg-light'
                                     };
-                                    ?>
+                                ?>
                                     <tr>
                                         <td><?= $no++ ?></td>
                                         <td><?= htmlspecialchars($row['nomor_spt']) ?></td>
@@ -111,31 +112,34 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                         <td><?= htmlspecialchars($row['transportasi']) ?></td>
                                         <td><span class="badge <?= $badgeClass ?>"><?= ucfirst($status) ?></span></td>
                                         <td><?= $row['penandatangan'] ?? '<i class="text-muted">-</i>' ?></td>
-                                        <td class="text-center">
-                                            <div class="btn-list d-flex justify-content-center">
-                                                <?php if ($row['status'] !== 'dibatalkan'): ?>
-                                                    <a href="<?= BASE_URL ?>/modules/admin/spt/cetak.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info me-1" title="Cetak" target="_blank">
-                                                        <i class="fe fe-printer"></i>
-                                                    </a>
-                                                <?php endif; ?>
-                                                <?php if ($role === 'admin' && $status === 'draft'): ?>
-                                                    <a href="<?= BASE_URL ?>/modules/admin/spt/edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning me-1" title="Edit">
-                                                        <i class="fe fe-edit"></i>
-                                                    </a>
-                                                    <button onclick="confirmDelete('<?= BASE_URL ?>/modules/admin/spt/delete.php?id=<?= $row['id'] ?>')" class="btn btn-sm btn-danger" title="Hapus">
-                                                        <i class="fe fe-trash-2"></i>
-                                                    </button>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
+                                        <?php if ($role !== 'pegawai'): ?>
+                                            <td class="text-center">
+                                                <div class="btn-list d-flex justify-content-center">
+                                                    <?php if ($status !== 'dibatalkan'): ?>
+                                                        <a href="<?= BASE_URL ?>/modules/admin/spt/cetak.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info me-1" title="Cetak" target="_blank">
+                                                            <i class="fe fe-printer"></i>
+                                                        </a>
+                                                    <?php endif; ?>
+                                                    <?php if ($canEditDelete && $status === 'draft'): ?>
+                                                        <a href="<?= BASE_URL ?>/modules/admin/spt/edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning me-1" title="Edit">
+                                                            <i class="fe fe-edit"></i>
+                                                        </a>
+                                                        <button onclick="confirmDelete('<?= BASE_URL ?>/modules/admin/spt/delete.php?id=<?= $row['id'] ?>')" class="btn btn-sm btn-danger" title="Hapus">
+                                                            <i class="fe fe-trash-2"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        <?php endif; ?>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="10" class="text-center text-muted">Belum ada data SPT.</td>
+                                    <td colspan="<?= $role === 'pegawai' ? '9' : '10' ?>" class="text-center text-muted">Belum ada data SPT.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
+
                     </table>
                 </div>
             </div>

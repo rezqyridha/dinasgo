@@ -42,7 +42,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
     <div class="container-fluid">
         <div class="card custom-card mt-5 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><?= $pageTitle ?></h5>
+                <div class="card-title mb-0"><?= htmlspecialchars($pageTitle) ?></div>
                 <?php if ($role === 'admin'): ?>
                     <a href="<?= BASE_URL ?>/modules/admin/rincian_biaya/add.php" class="btn btn-sm btn-primary">
                         <i class="fe fe-plus me-1"></i> Tambah Rincian
