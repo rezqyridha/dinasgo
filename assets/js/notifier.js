@@ -36,6 +36,16 @@ document.addEventListener("DOMContentLoaded", () => {
             title: "Verifikasi Atasan",
             text: `Pengajuan berhasil diverifikasi oleh atasan.`,
         },
+        disetujui: {
+            icon: "success",
+            title: "Rincian Disetujui",
+            text: "Rincian biaya berhasil disetujui oleh bendahara.",
+        },
+        diajukan: {
+            icon: "success",
+            title: "Rincian Diajukan",
+            text: "Rincian biaya berhasil diajukan ke bendahara.",
+        },
 
         // === ERROR / FAILED ===
         error: {
@@ -57,6 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
             icon: "error",
             title: "Tidak Bisa Dihapus",
             text: `${capitalize(obj)} terkait dengan data lain (relasi aktif).`,
+        },
+        ditolak: {
+            icon: "error",
+            title: "Rincian Ditolak",
+            text: "Rincian biaya telah ditolak oleh bendahara.",
         },
 
         // === WARNING ===
@@ -86,6 +101,21 @@ document.addEventListener("DOMContentLoaded", () => {
             text: `${capitalize(
                 obj
             )} tidak dapat diubah karena terhubung ke user.`,
+        },
+        notfound: {
+            icon: "warning",
+            title: "Data Tidak Ditemukan",
+            text: "Rincian biaya tidak tersedia atau bukan status draft.",
+        },
+        nodetail: {
+            icon: "warning",
+            title: "Detail Kosong",
+            text: "Minimal satu baris rincian biaya harus diisi sebelum diajukan.",
+        },
+        invalid: {
+            icon: "warning",
+            title: "Permintaan Tidak Valid",
+            text: "Parameter tidak lengkap atau salah.",
         },
 
         // === INFO ===
@@ -131,3 +161,23 @@ function confirmDelete(url) {
         }
     });
 }
+
+window.notifier = {
+    show: function (message, type = "info", timeout = 1000) {
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${type} position-fixed start-50 translate-middle-x`;
+        alertDiv.style.top = "58%";
+        alertDiv.style.transform = "translate(-50%, -50%)";
+        alertDiv.style.left = "50%";
+        alertDiv.style.maxWidth = "400px";
+        alertDiv.style.width = "auto";
+        alertDiv.style.textAlign = "center";
+        alertDiv.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
+        alertDiv.style.padding = "1rem 1.5rem";
+        alertDiv.style.borderRadius = "8px";
+        alertDiv.style.zIndex = 9999;
+        alertDiv.innerText = message;
+        document.body.appendChild(alertDiv);
+        setTimeout(() => alertDiv.remove(), timeout);
+    },
+};

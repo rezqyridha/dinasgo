@@ -4,16 +4,16 @@ require_once CONFIG_PATH . '/koneksi.php';
 require_once AUTH_PATH . '/session.php';
 require_once FPDF_PATH . '/fpdf.php';
 
-// ✅ Hanya admin yang boleh cetak
+//  Hanya admin yang boleh cetak
 if ($_SESSION['role'] !== 'admin') {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-// ✅ Ambil ID
+//  Ambil ID
 $id = (int) ($_GET['id'] ?? 0);
 
-// ✅ Validasi status SPT sebelum cetak
+//  Validasi status SPT sebelum cetak
 $cek = $conn->prepare("SELECT status FROM spt WHERE id = ?");
 $cek->bind_param("i", $id);
 $cek->execute();
@@ -25,7 +25,7 @@ if (!$status || $status === 'dibatalkan') {
     exit;
 }
 
-// ✅ Ambil data lengkap untuk dicetak
+//  Ambil data lengkap untuk dicetak
 $stmt = $conn->prepare("
     SELECT spt.*, 
            peg.nama AS nama_pegawai, peg.nip, peg.jabatan, 

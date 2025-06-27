@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/constants.php';
 require_once CONFIG_PATH . '/koneksi.php';
-require_once AUTH_PATH . '/session.php'; // ✅ Validasi login dan RBAC
+require_once AUTH_PATH . '/session.php'; // 
 
 $pageTitle = 'Dashboard Admin';
 

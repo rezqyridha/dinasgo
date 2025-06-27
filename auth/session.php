@@ -5,21 +5,21 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ✅ Validasi login
+//  Validasi login
 if (!isset($_SESSION['id_user']) || !isset($_SESSION['role'])) {
     header('Location: ' . BASE_URL . '/auth/login.php?msg=unauthorized');
     exit;
 }
 
-// ✅ Cegah double load
+
+//  Cegah double load
 if (defined('SESSION_VALIDATED')) return;
 define('SESSION_VALIDATED', true);
-
-// ✅ Info dasar session
+//  Info dasar session
 $currentRole   = $_SESSION['role'];
 $currentUserId = $_SESSION['id_user'];
 
-// ✅ Deteksi folder & modul dari URL
+//  Deteksi folder & modul dari URL
 $path = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($path, PHP_URL_PATH), '/'));
 $key = array_search('modules', $segments);
@@ -29,17 +29,18 @@ if ($key === false) return;
 $folder = $segments[$key + 1] ?? '';
 $modul  = $segments[$key + 2] ?? '';
 
-// ✅ Konfigurasi Akses RBAC
+//  Konfigurasi Akses RBAC
 $sharedAccess = [
-    'pegawai'     => ['admin', 'pegawai'],
-    'spt'         => ['admin', 'pegawai', 'bendahara', 'atasan'],
-    'pengajuan'   => ['admin', 'pegawai'],
-    'laporan'     => ['admin', 'bendahara', 'atasan'],
-    'notifikasi'  => ['admin', 'pegawai', 'atasan'],
-    'surat'       => ['admin', 'pegawai'],
+    'pegawai'       => ['admin', 'pegawai'],
+    'pengajuan'     => ['admin', 'pegawai'],
+    'spt'           => ['admin', 'pegawai', 'bendahara', 'atasan'],
+    'rincian_biaya' => ['admin', 'bendahara', 'pegawai', 'atasan'],
+    'laporan'       => ['admin', 'bendahara', 'atasan'],
+    'notifikasi'    => ['admin', 'pegawai', 'atasan'],
+    'surat'         => ['admin', 'pegawai'],
 ];
 
-// ✅ Validasi RBAC
+//  Validasi RBAC
 if ($folder === 'shared') {
     if (!isset($sharedAccess[$modul]) || !in_array($currentRole, $sharedAccess[$modul])) {
         header("Location: " . BASE_URL . "/modules/$currentRole/dashboard.php?msg=unauthorized");

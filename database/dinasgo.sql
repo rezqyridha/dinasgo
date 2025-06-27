@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `dokumentasi_kegiatan` (
   CONSTRAINT `dokumentasi_kegiatan_ibfk_1` FOREIGN KEY (`id_pengajuan`) REFERENCES `pengajuan_perjalanan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.dokumentasi_kegiatan: ~0 rows (approximately)
+-- Dumping data for table dinasgo.dokumentasi_kegiatan: ~3 rows (approximately)
 INSERT INTO `dokumentasi_kegiatan` (`id`, `id_pengajuan`, `jenis_dokumentasi`, `nama_file`, `keterangan`, `uploaded_at`) VALUES
 	(1, 2, 'foto', 'surabaya_site.jpg', 'Lokasi proyek air minum', '2025-06-25 07:21:21'),
 	(2, 4, 'laporan', 'laporan_dinasgo.pdf', 'Laporan kegiatan DinasGo', '2025-06-25 07:21:21'),
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `kepala` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.kepala: ~1 rows (approximately)
+-- Dumping data for table dinasgo.kepala: ~0 rows (approximately)
 INSERT INTO `kepala` (`id`, `nama`, `nip`, `jabatan`, `ttd_gambar`, `tahun`, `created_at`) VALUES
 	(1, 'Dr. Ir. Sutrisno, MT', '196504011993031001', 'Kepala Balai Wilayah Sungai', 'ttd_sutrisno.png', '2025', '2025-06-25 07:21:21');
 
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS `pegawai` (
   CONSTRAINT `pegawai_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.pegawai: ~2 rows (approximately)
+-- Dumping data for table dinasgo.pegawai: ~3 rows (approximately)
 INSERT INTO `pegawai` (`id`, `id_user`, `nip`, `nama`, `jabatan`, `no_hp`, `email`, `alamat`) VALUES
 	(1, 2, '197812312001011001', 'Rina Ayu', 'Pegawai', '081234567890', 'rina@dinas.go.id', 'Jl. Merdeka No. 1'),
 	(2, 4, '198006152002121002', 'Fajar Santoso', 'Kasubag Keuangan', '081298889999', 'fajar@dinas.go.id', 'Jl. Mataram No. 3');
@@ -205,50 +205,48 @@ INSERT INTO `persetujuan` (`id`, `id_pengajuan`, `id_verifikator`, `catatan`, `s
 	(3, 3, 3, 'Tidak relevan dengan target dinas', 'ditolak', '2025-08-20'),
 	(4, 6, 1, 'test verif admin', 'disetujui', '2025-06-26');
 
--- Dumping structure for table dinasgo.rencana_perjalanan
-CREATE TABLE IF NOT EXISTS `rencana_perjalanan` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_pegawai` int NOT NULL,
-  `tujuan` varchar(150) DEFAULT NULL,
-  `tanggal_berangkat` date DEFAULT NULL,
-  `tanggal_kembali` date DEFAULT NULL,
-  `jenis_transportasi` varchar(100) DEFAULT NULL,
-  `tujuan_kegiatan` text,
-  `status` enum('direncanakan','diajukan','dibatalkan') DEFAULT 'direncanakan',
-  PRIMARY KEY (`id`),
-  KEY `id_pegawai` (`id_pegawai`),
-  CONSTRAINT `rencana_perjalanan_ibfk_1` FOREIGN KEY (`id_pegawai`) REFERENCES `pegawai` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Dumping data for table dinasgo.rencana_perjalanan: ~3 rows (approximately)
-INSERT INTO `rencana_perjalanan` (`id`, `id_pegawai`, `tujuan`, `tanggal_berangkat`, `tanggal_kembali`, `jenis_transportasi`, `tujuan_kegiatan`, `status`) VALUES
-	(1, 1, 'Yogyakarta', '2025-07-10', '2025-07-12', 'Pesawat', 'Kunjungan lapangan', 'direncanakan'),
-	(2, 2, 'Surabaya', '2025-08-01', '2025-08-04', 'Kereta', 'Monitoring proyek air bersih', 'diajukan'),
-	(3, 1, 'Semarang', '2025-09-01', '2025-09-02', 'Mobil Dinas', 'Diskusi antar instansi', 'dibatalkan');
-
 -- Dumping structure for table dinasgo.rincian_biaya
 CREATE TABLE IF NOT EXISTS `rincian_biaya` (
   `id` int NOT NULL AUTO_INCREMENT,
   `id_pengajuan` int NOT NULL,
-  `jenis_biaya` varchar(100) DEFAULT NULL,
-  `uraian` text,
-  `jumlah` int DEFAULT NULL,
-  `satuan` varchar(50) DEFAULT NULL,
-  `harga_satuan` decimal(12,2) DEFAULT NULL,
-  `total` decimal(12,2) DEFAULT NULL,
-  `keterangan` text,
-  `tanggal` date DEFAULT NULL,
+  `nomor_rincian` varchar(100) NOT NULL,
+  `tanggal_rincian` date NOT NULL,
+  `jumlah_total` decimal(15,2) NOT NULL,
+  `status` enum('draft','diajukan','disetujui','ditolak','selesai') DEFAULT 'draft',
+  `dibuat_oleh` int DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `nomor_rincian` (`nomor_rincian`),
   KEY `id_pengajuan` (`id_pengajuan`),
-  CONSTRAINT `rincian_biaya_ibfk_1` FOREIGN KEY (`id_pengajuan`) REFERENCES `pengajuan_perjalanan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `dibuat_oleh` (`dibuat_oleh`),
+  CONSTRAINT `rincian_biaya_ibfk_1` FOREIGN KEY (`id_pengajuan`) REFERENCES `pengajuan_perjalanan` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `rincian_biaya_ibfk_2` FOREIGN KEY (`dibuat_oleh`) REFERENCES `user` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.rincian_biaya: ~0 rows (approximately)
-INSERT INTO `rincian_biaya` (`id`, `id_pengajuan`, `jenis_biaya`, `uraian`, `jumlah`, `satuan`, `harga_satuan`, `total`, `keterangan`, `tanggal`) VALUES
-	(1, 1, 'Transportasi', 'Tiket Pesawat BJM-YK PP', 1, 'paket', 1500000.00, 1500000.00, 'Garuda Indonesia', '2025-07-10'),
-	(2, 1, 'Akomodasi', 'Hotel 2 malam', 2, 'malam', 500000.00, 1000000.00, 'Hotel Mataram', '2025-07-11'),
-	(3, 1, 'Uang Harian', '3 hari x 200.000', 3, 'hari', 200000.00, 600000.00, 'Sesuai peraturan', '2025-07-10'),
-	(4, 2, 'Transportasi', 'Kereta Eksekutif', 1, 'paket', 900000.00, 900000.00, 'KA Gajayana', '2025-08-01');
+-- Dumping data for table dinasgo.rincian_biaya: ~1 rows (approximately)
+INSERT INTO `rincian_biaya` (`id`, `id_pengajuan`, `nomor_rincian`, `tanggal_rincian`, `jumlah_total`, `status`, `dibuat_oleh`, `created_at`, `updated_at`) VALUES
+	(3, 6, 'RB-001/2025', '2025-06-01', 1750000.00, 'diajukan', 1, '2025-06-27 09:35:42', '2025-06-27 09:48:04');
+
+-- Dumping structure for table dinasgo.rincian_biaya_detail
+CREATE TABLE IF NOT EXISTS `rincian_biaya_detail` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_rincian` int NOT NULL,
+  `jenis_biaya` varchar(100) NOT NULL,
+  `keterangan` text,
+  `jumlah` int NOT NULL,
+  `satuan` varchar(50) NOT NULL,
+  `harga_satuan` decimal(15,2) NOT NULL,
+  `total` decimal(15,2) GENERATED ALWAYS AS ((`jumlah` * `harga_satuan`)) STORED,
+  PRIMARY KEY (`id`),
+  KEY `id_rincian` (`id_rincian`),
+  CONSTRAINT `rincian_biaya_detail_ibfk_1` FOREIGN KEY (`id_rincian`) REFERENCES `rincian_biaya` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table dinasgo.rincian_biaya_detail: ~2 rows (approximately)
+INSERT INTO `rincian_biaya_detail` (`id`, `id_rincian`, `jenis_biaya`, `keterangan`, `jumlah`, `satuan`, `harga_satuan`) VALUES
+	(6, 3, 'uang harian', '2 hari', 2, 'hari', 250000.00),
+	(7, 3, 'Transportasi', 'PP Banjarmasin', 1, 'TIket', 1250000.00);
 
 -- Dumping structure for table dinasgo.sppd
 CREATE TABLE IF NOT EXISTS `sppd` (
@@ -287,11 +285,11 @@ CREATE TABLE IF NOT EXISTS `spt` (
   KEY `fk_spt_user` (`ditandatangani_oleh`),
   CONSTRAINT `fk_spt_pengajuan` FOREIGN KEY (`id_pengajuan`) REFERENCES `pengajuan_perjalanan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_spt_user` FOREIGN KEY (`ditandatangani_oleh`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table dinasgo.spt: ~3 rows (approximately)
 INSERT INTO `spt` (`id`, `id_pengajuan`, `nomor_spt`, `tanggal_spt`, `maksud_perjalanan`, `lama_perjalanan`, `transportasi`, `status`, `ditandatangani_oleh`, `created_at`, `updated_at`) VALUES
-	(1, 1, 'SPT-001/2025', '2025-07-05', 'Kunjungan lapangan proyek sungai', '3 hari', 'Pesawat', 'draft', 3, '2025-06-25 15:21:21', '2025-06-25 15:21:21'),
+	(1, 1, 'SPT-001/2025', '2025-07-05', 'Kunjungan lapangan ke proyek sungai', '3 hari', 'Pesawat Terbang', 'draft', 3, '2025-06-25 15:21:21', '2025-06-26 15:33:28'),
 	(2, 2, 'SPT-002/2025', '2025-07-26', 'Monitoring dan pelaporan', '4 hari', 'Kereta', 'ditandatangani', 3, '2025-06-25 15:21:21', '2025-06-25 15:21:21'),
 	(3, 3, 'SPT-003/2025', '2025-08-28', 'Diskusi internal', '2 hari', 'Mobil Dinas', 'dibatalkan', 3, '2025-06-25 15:21:21', '2025-06-25 15:21:21');
 
@@ -306,7 +304,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.user: ~4 rows (approximately)
+-- Dumping data for table dinasgo.user: ~5 rows (approximately)
 INSERT INTO `user` (`id`, `nama`, `username`, `password`, `role`, `status`) VALUES
 	(1, 'Admin Utama', 'admin01', 'admin123', 'admin', 'aktif'),
 	(2, 'Rina Ayu', 'pegawai01', 'user123', 'pegawai', 'aktif'),
