@@ -45,7 +45,7 @@ function is_uri_match(array $patterns): bool
                     </a>
                 </li>
                 <li>
-                    <a href="<?= BASE_URL ?>/modules/bendahara/pencairan_dana/index.php"
+                    <a href="<?= BASE_URL ?>/modules/shared/pencairan_dana/index.php"
                         class="side-menu__item <?= str_contains($current_uri, '/pencairan_dana/') ? 'active' : '' ?>">
                         Pencairan Dana
                     </a>

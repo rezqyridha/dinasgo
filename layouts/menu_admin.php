@@ -29,7 +29,7 @@ function is_uri_match(array $patterns): bool
         <!-- DATA -->
         <li class="slide__category"><span class="category-name">Data</span></li>
         <?php
-        $manajemen_uri = ['/user/', '/pegawai/', '/spt/', '/rincian_biaya/', '/pengajuan/', '/persetujuan/', '/sppd/', '/dokumen/', '/evaluasi/'];
+        $manajemen_uri = ['/user/', '/pegawai/', '/spt/', '/rincian_biaya/', '/pengajuan/', '/pencairan_dana/',  '/sppd/', '/dokumen/', '/evaluasi/'];
         ?>
         <li class="slide has-sub <?= is_uri_match($manajemen_uri) ? 'open active' : '' ?>">
             <a href="#" class="side-menu__item">
@@ -43,10 +43,11 @@ function is_uri_match(array $patterns): bool
                 <li><a href="<?= BASE_URL ?>/modules/shared/pengajuan/index.php" class="side-menu__item <?= str_contains($current_uri, '/pengajuan/') ? 'active' : '' ?>">Pengajuan Perjalanan</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/spt/index.php" class="side-menu__item <?= str_contains($current_uri, '/spt/') ? 'active' : '' ?>">Manajemen SPT</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/index.php" class="side-menu__item <?= str_contains($current_uri, '/rincian_biaya/') ? 'active' : '' ?>">Rincian Biaya</a></li>
-                <li><a href="<?= BASE_URL ?>/modules/admin/persetujuan/index.php" class="side-menu__item <?= str_contains($current_uri, '/persetujuan/') ? 'active' : '' ?>">Persetujuan</a></li>
+                <li><a href="<?= BASE_URL ?>/modules/shared/pencairan_dana/index.php" class="side-menu__item <?= str_contains($current_uri, '/pencairan_dana/') ? 'active' : '' ?>">Pencairan Dana</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/admin/sppd/index.php" class="side-menu__item <?= str_contains($current_uri, '/sppd/') ? 'active' : '' ?>">Proses SPPD</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/admin/dokumen/index.php" class="side-menu__item <?= str_contains($current_uri, '/dokumen/') ? 'active' : '' ?>">Upload Dokumen</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/admin/evaluasi/index.php" class="side-menu__item <?= str_contains($current_uri, '/evaluasi/') ? 'active' : '' ?>">Evaluasi Perjalanan</a></li>
+
             </ul>
         </li>
 
