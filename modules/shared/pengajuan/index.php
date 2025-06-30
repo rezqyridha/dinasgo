@@ -65,7 +65,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
 
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover table-striped align-middle mb-0" id="tabel-pengajuan">
-                        <thead class="table-light">
+                        <thead class="table-primary">
                             <tr>
                                 <th>No</th>
                                 <th>Nama Pegawai</th>

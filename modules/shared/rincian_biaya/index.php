@@ -57,7 +57,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
 
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped align-middle" id="tabel-rincian">
-                        <thead class="table-light">
+                        <thead class="table-primary">
                             <tr>
                                 <th>No</th>
                                 <th>Nomor</th>

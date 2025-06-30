@@ -56,7 +56,7 @@ function getRoleBadgeClass($role)
 
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover table-striped align-middle mb-0" id="tabel-user">
-                                <thead class="table-light">
+                                <thead class="table-primary">
                                     <tr>
                                         <th>No</th>
                                         <th>Nama</th>

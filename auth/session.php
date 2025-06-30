@@ -34,6 +34,7 @@ $sharedAccess = [
     'pegawai'       => ['admin', 'pegawai'],
     'pengajuan'     => ['admin', 'pegawai'],
     'spt'           => ['admin', 'pegawai', 'bendahara', 'atasan'],
+    'sppd'          => ['admin', 'atasan'],
     'rincian_biaya' => ['admin', 'pegawai', 'bendahara', 'atasan'],
     'pencairan_dana' => ['admin', 'pegawai', 'bendahara'],
     'laporan'       => ['admin', 'bendahara', 'atasan'],

@@ -14,7 +14,13 @@ require_once LAYOUTS_PATH . '/sidebar.php';
 // Ambil data statistik
 $totalRincianDiajukan = $conn->query("SELECT COUNT(*) as total FROM rincian_biaya WHERE status = 'diajukan'")->fetch_assoc()['total'];
 $totalPencairan = $conn->query("SELECT COUNT(*) as total FROM pencairan_dana")->fetch_assoc()['total'];
-$totalDanaDicairkan = $conn->query("SELECT SUM(jumlah_dana) as total FROM pencairan_dana")->fetch_assoc()['total'] ?? 0;
+$totalDanaDicairkan = $conn->query("
+    SELECT 
+        SUM(
+            CAST(REPLACE(REPLACE(jumlah_dana, '.', ''), ',', '') AS UNSIGNED)
+        ) as total 
+    FROM pencairan_dana
+")->fetch_assoc()['total'] ?? 0;
 ?>
 
 <div class="main-content app-content">
