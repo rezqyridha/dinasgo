@@ -45,7 +45,7 @@ function is_uri_match(array $patterns): bool
                 <li><a href="<?= BASE_URL ?>/modules/shared/sppd/index.php" class="side-menu__item <?= str_contains($current_uri, '/sppd/') ? 'active' : '' ?>">Proses SPPD</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/index.php" class="side-menu__item <?= str_contains($current_uri, '/rincian_biaya/') ? 'active' : '' ?>">Rincian Biaya</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/pencairan_dana/index.php" class="side-menu__item <?= str_contains($current_uri, '/pencairan_dana/') ? 'active' : '' ?>">Pencairan Dana</a></li>
-                <li><a href="<?= BASE_URL ?>/modules/admin/dokumen/index.php" class="side-menu__item <?= str_contains($current_uri, '/dokumen/') ? 'active' : '' ?>">Upload Dokumen</a></li>
+                <li><a href="<?= BASE_URL ?>/modules/shared/dokumen/index.php" class="side-menu__item <?= str_contains($current_uri, '/dokumen/') ? 'active' : '' ?>">Upload Dokumen</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/admin/evaluasi/index.php" class="side-menu__item <?= str_contains($current_uri, '/evaluasi/') ? 'active' : '' ?>">Evaluasi Perjalanan</a></li>
 
             </ul>

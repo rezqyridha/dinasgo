@@ -37,6 +37,7 @@ $sharedAccess = [
     'sppd'          => ['admin', 'atasan'],
     'rincian_biaya' => ['admin', 'pegawai', 'bendahara', 'atasan'],
     'pencairan_dana' => ['admin', 'pegawai', 'bendahara'],
+    'dokumen'       => ['admin', 'pegawai', 'atasan'],
     'laporan'       => ['admin', 'bendahara', 'atasan'],
     'notifikasi'    => ['admin', 'pegawai', 'atasan'],
     'surat'         => ['admin', 'pegawai'],

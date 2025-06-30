@@ -16,7 +16,7 @@ function isSubmenuActive($path)
     return str_contains($GLOBALS['current_uri'], $path) ? 'active' : '';
 }
 
-$submenuPengajuan = isMenuActive(['/modules/shared/pengajuan', '/modules/shared/spt']);
+$submenuPengajuan = isMenuActive(['/modules/shared/pengajuan', '/modules/shared/spt', '/modules/shared/upload_dokumen']);
 $submenuEvaluasi = isMenuActive(['/modules/shared/evaluasi']);
 ?>
 
@@ -44,6 +44,7 @@ $submenuEvaluasi = isMenuActive(['/modules/shared/evaluasi']);
             <ul class="slide-menu child2">
                 <li><a href="<?= BASE_URL ?>/modules/shared/pengajuan/index.php" class="side-menu__item <?= isSubmenuActive('/pengajuan') ?>">Form Pengajuan</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/spt/index.php" class="side-menu__item <?= isSubmenuActive('/spt') ?>">Surat Perintah (SPT)</a></li>
+                <li><a href="<?= BASE_URL ?>/modules/shared/dokumen/index.php" class="side-menu__item <?= isSubmenuActive('/upload_dokumen') ?>">Upload Dokumen</a></li>
             </ul>
         </li>
 
