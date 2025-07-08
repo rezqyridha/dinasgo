@@ -8,6 +8,11 @@ $role = $_SESSION['role'];
 $id_user = $_SESSION['id_user'];
 
 // Proteksi role
+$canEditDelete = in_array($role, ['admin']);
+if (!$canEditDelete && !in_array($role, ['pegawai', 'atasan'])) {
+    header("Location: " . BASE_URL . "/unauthorized.php");
+    exit;
+}
 $canRead = in_array($role, ['admin', 'pegawai', 'atasan']);
 if (!$canRead) {
     header("Location: " . BASE_URL . "/unauthorized.php");
@@ -26,11 +31,11 @@ if ($role === 'pegawai') {
     $id_pegawai = $id_pegawai ?? 0;
 
     $query = "
-        SELECT spt.*, peg.nama AS nama_pegawai, u.nama AS penandatangan
+        SELECT spt.*, peg.nama AS nama_pegawai, k.nama AS penandatangan
         FROM spt
         JOIN pengajuan_perjalanan pp ON spt.id_pengajuan = pp.id
         JOIN pegawai peg ON pp.id_pegawai = peg.id
-        LEFT JOIN user u ON spt.ditandatangani_oleh = u.id
+        LEFT JOIN kepala k ON spt.ditandatangani_oleh = k.id
         WHERE pp.id_pegawai = ?
         ORDER BY spt.tanggal_spt DESC";
     $stmt = $conn->prepare($query);
@@ -39,11 +44,11 @@ if ($role === 'pegawai') {
     $result = $stmt->get_result();
 } else {
     $query = "
-        SELECT spt.*, peg.nama AS nama_pegawai, u.nama AS penandatangan
+        SELECT spt.*, peg.nama AS nama_pegawai, k.nama AS penandatangan
         FROM spt
         JOIN pengajuan_perjalanan pp ON spt.id_pengajuan = pp.id
         JOIN pegawai peg ON pp.id_pegawai = peg.id
-        LEFT JOIN user u ON spt.ditandatangani_oleh = u.id
+        LEFT JOIN kepala k ON spt.ditandatangani_oleh = k.id
         ORDER BY spt.tanggal_spt DESC";
     $result = $conn->query($query);
 }
@@ -120,6 +125,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                                             <i class="fe fe-printer"></i>
                                                         </a>
                                                     <?php endif; ?>
+
                                                     <?php if ($canEditDelete && $status === 'draft'): ?>
                                                         <a href="<?= BASE_URL ?>/modules/admin/spt/edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning me-1" title="Edit">
                                                             <i class="fe fe-edit"></i>
@@ -128,8 +134,15 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                                             <i class="fe fe-trash-2"></i>
                                                         </button>
                                                     <?php endif; ?>
+
+                                                    <?php if ($status === 'dibatalkan'): ?>
+                                                        <!-- <span class="badge bg-secondary">Final</span>-->
+                                                        <!-- Atau jika mau tanda strip saja: -->
+                                                        <span>-</span>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
+
                                         <?php endif; ?>
                                     </tr>
                                 <?php endwhile; ?>

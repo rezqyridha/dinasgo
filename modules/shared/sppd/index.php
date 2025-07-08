@@ -7,21 +7,35 @@ $pageTitle = 'Daftar Surat Perintah Perjalanan Dinas (SPPD)';
 $role = $_SESSION['role'];
 $id_user = $_SESSION['id_user'];
 
-// Proteksi RBAC: hanya admin dan atasan
-if (!in_array($role, ['admin', 'atasan'])) {
+// Proteksi RBAC
+if (!in_array($role, ['admin', 'atasan', 'pegawai'])) {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-// Ambil data SPPD dan relasi
-$query = "
-    SELECT sppd.*, peg.nama AS nama_pegawai, pp.tujuan, pp.tanggal_berangkat
-    FROM sppd
-    JOIN pengajuan_perjalanan pp ON sppd.id_pengajuan = pp.id
-    JOIN pegawai peg ON pp.id_pegawai = peg.id
-    ORDER BY sppd.tanggal_terbit DESC
-";
-$result = $conn->query($query);
+// Ambil data sesuai role
+if ($role === 'pegawai') {
+    $stmt = $conn->prepare("
+        SELECT sppd.*, peg.nama AS nama_pegawai, pp.tujuan, pp.tanggal_berangkat
+        FROM sppd
+        JOIN pengajuan_perjalanan pp ON sppd.id_pengajuan = pp.id
+        JOIN pegawai peg ON pp.id_pegawai = peg.id
+        WHERE peg.id_user = ?
+        ORDER BY sppd.tanggal_terbit DESC
+    ");
+    $stmt->bind_param("i", $id_user);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $query = "
+        SELECT sppd.*, peg.nama AS nama_pegawai, pp.tujuan, pp.tanggal_berangkat
+        FROM sppd
+        JOIN pengajuan_perjalanan pp ON sppd.id_pengajuan = pp.id
+        JOIN pegawai peg ON pp.id_pegawai = peg.id
+        ORDER BY sppd.tanggal_terbit DESC
+    ";
+    $result = $conn->query($query);
+}
 
 require_once LAYOUTS_PATH . '/head.php';
 require_once LAYOUTS_PATH . '/header.php';
@@ -75,6 +89,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                         <td><?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?></td>
                                         <td><?= date('d-m-Y', strtotime($row['tanggal_terbit'])) ?></td>
                                         <td><?= htmlspecialchars($row['catatan']) ?></td>
+
                                         <?php if ($role === 'admin'): ?>
                                             <td class="text-center">
                                                 <div class="btn-list d-flex justify-content-center">
