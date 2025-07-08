@@ -89,15 +89,17 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                     </tr>
                 </table>
 
-                <?php if ($role === 'pegawai' || $role === 'admin'): ?>
+                <?php if (in_array($role, ['pegawai', 'admin', 'atasan'])): ?>
                     <div class="mt-4">
                         <a href="<?= BASE_URL ?>/modules/shared/dokumen/index.php" class="btn btn-secondary">
                             <i class="fe fe-arrow-left me-1"></i> Kembali
                         </a>
-                        <button type="button"
-                            class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadTambahanModal">
-                            <i class="fe fe-plus me-1"></i> Upload Dokumen Tambahan
-                        </button>
+                        <?php if ($role === 'pegawai' || $role === 'admin'): ?>
+                            <button type="button"
+                                class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadTambahanModal">
+                                <i class="fe fe-plus me-1"></i> Upload Dokumen Tambahan
+                            </button>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>

@@ -21,27 +21,49 @@ $input = [
 //  Ambil pengajuan yang sudah punya SPT & belum punya dokumen
 if ($role === 'pegawai') {
     // Pegawai: hanya pengajuan milik sendiri
+    // Pegawai: hanya milik sendiri
     $query = $conn->prepare("
-        SELECT pp.id, pp.tujuan, pp.tanggal_berangkat
-        FROM pengajuan_perjalanan pp
-        WHERE pp.id_pegawai = (SELECT id FROM pegawai WHERE id_user = ?)
-          AND EXISTS (SELECT 1 FROM spt WHERE spt.id_pengajuan = pp.id)
-          AND NOT EXISTS (SELECT 1 FROM dokumen WHERE dokumen.id_pengajuan = pp.id)
-        ORDER BY pp.tanggal_berangkat DESC
-    ");
+SELECT pp.id, pp.tujuan, pp.tanggal_berangkat
+FROM pengajuan_perjalanan pp
+WHERE pp.id_pegawai = (SELECT id FROM pegawai WHERE id_user = ?)
+  AND EXISTS (
+    SELECT 1 FROM spt 
+    WHERE spt.id_pengajuan = pp.id AND spt.status = 'ditandatangani'
+  )
+  AND EXISTS (
+    SELECT 1 FROM sppd 
+    WHERE sppd.id_pengajuan = pp.id
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM dokumen 
+    WHERE dokumen.id_pengajuan = pp.id
+  )
+ORDER BY pp.tanggal_berangkat DESC
+");
     $query->bind_param("i", $id_user);
+
     $query->execute();
     $pengajuan = $query->get_result();
 } else {
     // Admin: semua pengajuan
     $pengajuan = $conn->query("
-        SELECT pp.id, pp.tujuan, pp.tanggal_berangkat, peg.nama
-        FROM pengajuan_perjalanan pp
-        JOIN pegawai peg ON pp.id_pegawai = peg.id
-        WHERE EXISTS (SELECT 1 FROM spt WHERE spt.id_pengajuan = pp.id)
-          AND NOT EXISTS (SELECT 1 FROM dokumen WHERE dokumen.id_pengajuan = pp.id)
-        ORDER BY pp.tanggal_berangkat DESC
-    ");
+    SELECT pp.id, pp.tujuan, pp.tanggal_berangkat, peg.nama
+    FROM pengajuan_perjalanan pp
+    JOIN pegawai peg ON pp.id_pegawai = peg.id
+    WHERE EXISTS (
+        SELECT 1 FROM spt 
+        WHERE spt.id_pengajuan = pp.id AND spt.status = 'ditandatangani'
+    )
+    AND EXISTS (
+        SELECT 1 FROM sppd 
+        WHERE sppd.id_pengajuan = pp.id
+    )
+    AND NOT EXISTS (
+        SELECT 1 FROM dokumen 
+        WHERE dokumen.id_pengajuan = pp.id
+    )
+    ORDER BY pp.tanggal_berangkat DESC
+");
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
