@@ -99,8 +99,11 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                     </tr>
                 </table>
                 <div class="text-end">
-                    <?php if (in_array($role, ['admin', 'bendahara'])): ?>
-                        <a href="cetak.php?id=<?= $data['id'] ?>" target="_blank" class="btn btn-primary ms-2">
+                    <?php if (
+                        in_array($role, ['admin', 'bendahara']) &&
+                        in_array($rincian['status'], ['disetujui', 'selesai'])
+                    ): ?>
+                        <a href="cetak_rincian.php?id=<?= $rincian['id'] ?>" target="_blank" class="btn btn-primary ms-2">
                             <i class="fe fe-printer me-1"></i> Cetak Bukti
                         </a>
                     <?php endif; ?>
