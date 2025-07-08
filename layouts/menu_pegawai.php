@@ -44,6 +44,9 @@ $submenuEvaluasi = isMenuActive(['/modules/shared/evaluasi']);
             <ul class="slide-menu child2">
                 <li><a href="<?= BASE_URL ?>/modules/shared/pengajuan/index.php" class="side-menu__item <?= isSubmenuActive('/pengajuan') ?>">Form Pengajuan</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/spt/index.php" class="side-menu__item <?= isSubmenuActive('/spt') ?>">Surat Perintah (SPT)</a></li>
+                <li><a href="<?= BASE_URL ?>/modules/shared/sppd/index.php" class="side-menu__item <?= isSubmenuActive('/sppd') ?>">SPPD</a></li>
+                <li><a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/index.php" class="side-menu__item <?= isSubmenuActive('/rincian_biaya') ?>">Rincian Biaya</a></li>
+                <li><a href="<?= BASE_URL ?>/modules/shared/pencairan_dana/index.php" class="side-menu__item <?= isSubmenuActive('/pencairan_dana') ?>">Pencairan Dana</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/dokumen/index.php" class="side-menu__item <?= isSubmenuActive('/upload_dokumen') ?>">Upload Dokumen</a></li>
             </ul>
         </li>
