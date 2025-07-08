@@ -18,15 +18,19 @@ $input = [
 $nomor_sppd = '';
 $error = '';
 
-// ✅ Ambil daftar pengajuan yang sudah punya SPT tapi belum ada SPPD
+//  Ambil daftar pengajuan yang sudah punya SPT tapi belum ada SPPD
 $pengajuan = $conn->query("
-    SELECT pp.id, peg.nama, pp.tujuan, pp.tanggal_berangkat
+    SELECT 
+      pp.id, 
+      peg.nama, 
+      pp.tujuan, 
+      pp.tanggal_berangkat,
+      spt.nomor_spt
     FROM pengajuan_perjalanan pp
     JOIN pegawai peg ON pp.id_pegawai = peg.id
-    WHERE EXISTS (
-        SELECT 1 FROM spt WHERE spt.id_pengajuan = pp.id
-    ) AND NOT EXISTS (
-        SELECT 1 FROM sppd WHERE sppd.id_pengajuan = pp.id
+    JOIN spt ON spt.id_pengajuan = pp.id AND spt.status = 'ditandatangani'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM sppd WHERE sppd.id_pengajuan = pp.id
     )
     ORDER BY pp.tanggal_berangkat DESC
 ");
@@ -99,8 +103,12 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                             <option value="">-- Pilih Pengajuan --</option>
                             <?php while ($row = $pengajuan->fetch_assoc()): ?>
                                 <option value="<?= $row['id'] ?>" <?= $input['id_pengajuan'] == $row['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($row['nama']) ?> - <?= htmlspecialchars($row['tujuan']) ?> (<?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?>)
+                                    <?= htmlspecialchars($row['nama']) ?>
+                                    - <?= htmlspecialchars($row['tujuan']) ?>
+                                    (<?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?>)
+                                    - SPT: <?= htmlspecialchars($row['nomor_spt']) ?>
                                 </option>
+
                             <?php endwhile; ?>
                         </select>
                     </div>
@@ -117,7 +125,9 @@ require_once LAYOUTS_PATH . '/sidebar.php';
 
                     <div class="mb-3">
                         <label class="form-label">Catatan</label>
-                        <textarea name="catatan" rows="3" class="form-control"><?= htmlspecialchars($input['catatan']) ?></textarea>
+                        <textarea name="catatan" rows="3" class="form-control"
+                            placeholder="Contoh: Laporan hasil kunjungan diserahkan paling lambat 3 hari setelah kembali."><?= htmlspecialchars($input['catatan'] ?? '') ?></textarea>
+
                     </div>
 
                     <div class="d-flex justify-content-between">

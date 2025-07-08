@@ -7,13 +7,13 @@ $pageTitle = 'Edit Surat Perintah Tugas (SPT)';
 $role = $_SESSION['role'] ?? '';
 $id_user = $_SESSION['id_user'] ?? 0;
 
-// ✅ Hanya admin
+// Hanya admin
 if ($role !== 'admin') {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-// ✅ Validasi ID SPT
+// Validasi ID
 $id = (int) ($_GET['id'] ?? 0);
 $stmt = $conn->prepare("SELECT * FROM spt WHERE id = ?");
 $stmt->bind_param("i", $id);
@@ -29,7 +29,7 @@ if (!$data || $data['status'] !== 'draft') {
 $error = '';
 $id_pengajuan = $data['id_pengajuan'];
 
-// ✅ Ambil info pengajuan
+// Info pengajuan
 $stmtP = $conn->prepare("
     SELECT peg.nama, p.tujuan, p.tanggal_berangkat
     FROM pengajuan_perjalanan p
@@ -40,13 +40,23 @@ $stmtP->bind_param("i", $id_pengajuan);
 $stmtP->execute();
 $peng = $stmtP->get_result()->fetch_assoc();
 
-// ✅ Jika disubmit
+// Daftar kepala
+$kepala = $conn->query("SELECT id, nama, jabatan FROM kepala");
+
+// Jika disubmit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nomor_spt = trim($_POST['nomor_spt']);
     $tanggal_spt = $_POST['tanggal_spt'];
     $transportasi = trim($_POST['transportasi']);
+    $id_kepala = $_POST['ditandatangani_oleh'] ?? '';
 
-    // ✅ Ambil ulang info otomatis dari pengajuan
+    // Penandatangan NULL-safe
+    $penandatangan_id = $id_kepala !== '' ? (int)$id_kepala : NULL;
+
+    // Status otomatis
+    $status_spt = $penandatangan_id ? 'ditandatangani' : 'draft';
+
+    // Ambil data
     $stmtData = $conn->prepare("SELECT keperluan, tanggal_berangkat, tanggal_kembali FROM pengajuan_perjalanan WHERE id = ?");
     $stmtData->bind_param("i", $id_pengajuan);
     $stmtData->execute();
@@ -61,20 +71,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $conn->prepare("UPDATE spt SET 
             nomor_spt = ?, tanggal_spt = ?, maksud_perjalanan = ?, 
-            lama_perjalanan = ?, transportasi = ? WHERE id = ?");
-        $stmt->bind_param("sssssi", $nomor_spt, $tanggal_spt, $maksud_perjalanan, $lama_perjalanan, $transportasi, $id);
+            lama_perjalanan = ?, transportasi = ?, ditandatangani_oleh = ?, status = ?
+            WHERE id = ?");
+        $stmt->bind_param(
+            "sssssssi",
+            $nomor_spt,
+            $tanggal_spt,
+            $maksud_perjalanan,
+            $lama_perjalanan,
+            $transportasi,
+            $penandatangan_id,
+            $status_spt,
+            $id
+        );
 
         if ($stmt->execute()) {
             header("Location: " . BASE_URL . "/modules/shared/spt/index.php?msg=updated&obj=spt");
             exit;
         } else {
-            header("Location: " . BASE_URL . "/modules/shared/spt/index.php?msg=error&obj=spt");
-            exit;
+            $error = "Gagal memperbarui data.";
         }
     }
 }
 
-// ✅ Layout
 require_once LAYOUTS_PATH . '/head.php';
 require_once LAYOUTS_PATH . '/header.php';
 require_once LAYOUTS_PATH . '/topbar.php';
@@ -92,40 +111,61 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         <div class="card custom-card shadow-sm">
             <div class="card-body">
                 <form method="POST">
-                    <!-- ✅ Info Pengajuan (Readonly) -->
+                    <!-- Info Pengajuan -->
                     <div class="mb-3">
                         <label class="form-label">Pengajuan</label>
-                        <input type="text" class="form-control" value="<?= $peng['nama'] ?> - Tujuan Ke(<?= $peng['tujuan'] ?>) - (<?= date('d-m-Y', strtotime($peng['tanggal_berangkat'])) ?>) " readonly>
+                        <input type="text" class="form-control"
+                            value="<?= $peng['nama'] ?> - Tujuan Ke(<?= $peng['tujuan'] ?>) - (<?= date('d-m-Y', strtotime($peng['tanggal_berangkat'])) ?>)" readonly>
                         <input type="hidden" name="id_pengajuan" value="<?= $id_pengajuan ?>">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Nomor SPT</label>
-                        <input type="text" name="nomor_spt" class="form-control" value="<?= htmlspecialchars($data['nomor_spt']) ?>" required>
+                        <input type="text" name="nomor_spt" class="form-control"
+                            value="<?= htmlspecialchars($data['nomor_spt']) ?>" readonly>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Tanggal SPT</label>
-                        <input type="date" name="tanggal_spt" class="form-control" value="<?= htmlspecialchars($data['tanggal_spt']) ?>" required>
+                        <input type="date" name="tanggal_spt" class="form-control"
+                            value="<?= htmlspecialchars($data['tanggal_spt']) ?>" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Maksud Perjalanan</label>
-                        <textarea class="form-control" id="maksud_perjalanan" rows="3" readonly><?= htmlspecialchars($data['maksud_perjalanan']) ?></textarea>
+                        <textarea class="form-control" rows="3" readonly><?= htmlspecialchars($data['maksud_perjalanan']) ?></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Lama Perjalanan</label>
-                        <input type="text" id="lama_perjalanan" class="form-control" value="<?= htmlspecialchars($data['lama_perjalanan']) ?>" readonly>
+                        <input type="text" class="form-control"
+                            value="<?= htmlspecialchars($data['lama_perjalanan']) ?>" readonly>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Transportasi</label>
-                        <input type="text" name="transportasi" id="transportasi" class="form-control" value="<?= htmlspecialchars($data['transportasi']) ?>" required>
+                        <input type="text" name="transportasi" class="form-control"
+                            value="<?= htmlspecialchars($data['transportasi']) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ditandatangani Oleh</label>
+                        <select name="ditandatangani_oleh" class="form-select">
+                            <option value="">-- Pilih Kepala --</option>
+                            <?php while ($k = $kepala->fetch_assoc()): ?>
+                                <option value="<?= $k['id'] ?>"
+                                    <?= $data['ditandatangani_oleh'] == $k['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($k['nama']) ?> - <?= htmlspecialchars($k['jabatan']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                        <small class="text-muted">Kosongkan jika belum ingin ditandatangani.</small>
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <button type="submit" class="btn btn-success"><i class="fe fe-save me-1"></i> Simpan Perubahan</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fe fe-save me-1"></i> Simpan Perubahan
+                        </button>
                         <a href="<?= BASE_URL ?>/modules/shared/spt/index.php" class="btn btn-secondary">Batal</a>
                     </div>
                 </form>
