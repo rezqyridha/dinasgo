@@ -31,16 +31,17 @@ $modul  = $segments[$key + 2] ?? '';
 
 //  Konfigurasi Akses RBAC
 $sharedAccess = [
+    'user'          => ['admin'],
     'pegawai'       => ['admin', 'pegawai'],
-    'pengajuan'     => ['admin', 'pegawai'],
-    'spt'           => ['admin', 'pegawai', 'bendahara', 'atasan'],
-    'sppd'          => ['admin', 'atasan'],
-    'rincian_biaya' => ['admin', 'pegawai', 'bendahara', 'atasan'],
+    'pengajuan'     => ['admin', 'pegawai', 'atasan'],
+    'spt'           => ['admin', 'pegawai', 'atasan'],
+    'sppd'          => ['admin', 'pegawai', 'atasan'],
+    'rincian_biaya' => ['admin', 'pegawai', 'bendahara'],
     'pencairan_dana' => ['admin', 'pegawai', 'bendahara'],
     'dokumen'       => ['admin', 'pegawai', 'atasan'],
+    'evaluasi'      => ['admin', 'pegawai', 'atasan'],
     'laporan'       => ['admin', 'bendahara', 'atasan'],
     'notifikasi'    => ['admin', 'pegawai', 'atasan'],
-    'surat'         => ['admin', 'pegawai'],
 ];
 
 //  Validasi RBAC
