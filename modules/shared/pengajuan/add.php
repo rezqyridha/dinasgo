@@ -13,7 +13,7 @@ if ($_SESSION['role'] !== 'pegawai') {
 
 $id_user = $_SESSION['id_user'];
 
-// 🆔 Ambil ID Pegawai dari user login
+//  Ambil ID Pegawai dari user login
 $stmt = $conn->prepare("SELECT id FROM pegawai WHERE id_user = ?");
 $stmt->bind_param("i", $id_user);
 $stmt->execute();

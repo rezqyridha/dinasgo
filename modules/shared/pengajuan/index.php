@@ -71,6 +71,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                 <th>Nama Pegawai</th>
                                 <th>Tujuan</th>
                                 <th>Keperluan</th>
+                                <th>Estimasi Biaya</th>
                                 <th>Berangkat</th>
                                 <th>Kembali</th>
                                 <th>Tgl Pengajuan</th>
@@ -96,6 +97,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                         <td><?= htmlspecialchars($row['nama_pegawai']) ?></td>
                                         <td><?= htmlspecialchars($row['tujuan']) ?></td>
                                         <td><?= htmlspecialchars($row['keperluan']) ?></td>
+                                        <td>Rp <?= number_format($row['estimasi_biaya'], 0, ',', '.') ?></td>
                                         <td><?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?></td>
                                         <td><?= date('d-m-Y', strtotime($row['tanggal_kembali'])) ?></td>
                                         <td><?= date('d-m-Y', strtotime($row['created_at'])) ?></td>
@@ -142,7 +144,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted">Belum ada data pengajuan.</td>
+                                    <td colspan="10" class="text-center text-muted">Belum ada data pengajuan.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
