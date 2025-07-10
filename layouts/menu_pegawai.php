@@ -16,7 +16,7 @@ function isSubmenuActive($path)
     return str_contains($GLOBALS['current_uri'], $path) ? 'active' : '';
 }
 
-$submenuPengajuan = isMenuActive(['/modules/shared/pengajuan', '/modules/shared/spt', '/modules/shared/upload_dokumen']);
+$submenuPengajuan = isMenuActive(['/modules/shared/pengajuan', '/modules/shared/spt', '/modules/shared/dokumen', '/modules/shared/sppd', '/modules/shared/rincian_biaya', '/modules/shared/pencairan_dana']);
 $submenuEvaluasi = isMenuActive(['/modules/shared/evaluasi']);
 ?>
 
@@ -45,9 +45,9 @@ $submenuEvaluasi = isMenuActive(['/modules/shared/evaluasi']);
                 <li><a href="<?= BASE_URL ?>/modules/shared/pengajuan/index.php" class="side-menu__item <?= isSubmenuActive('/pengajuan') ?>">Form Pengajuan</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/spt/index.php" class="side-menu__item <?= isSubmenuActive('/spt') ?>">Surat Perintah (SPT)</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/sppd/index.php" class="side-menu__item <?= isSubmenuActive('/sppd') ?>">SPPD</a></li>
+                <li><a href="<?= BASE_URL ?>/modules/shared/dokumen/index.php" class="side-menu__item <?= isSubmenuActive('/dokumen') ?>">Upload Dokumen</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/index.php" class="side-menu__item <?= isSubmenuActive('/rincian_biaya') ?>">Rincian Biaya</a></li>
                 <li><a href="<?= BASE_URL ?>/modules/shared/pencairan_dana/index.php" class="side-menu__item <?= isSubmenuActive('/pencairan_dana') ?>">Pencairan Dana</a></li>
-                <li><a href="<?= BASE_URL ?>/modules/shared/dokumen/index.php" class="side-menu__item <?= isSubmenuActive('/upload_dokumen') ?>">Upload Dokumen</a></li>
             </ul>
         </li>
 
