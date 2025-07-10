@@ -7,36 +7,48 @@ $pageTitle = 'Detail Rincian Biaya';
 $role = $_SESSION['role'] ?? '';
 $id_user = $_SESSION['id_user'] ?? 0;
 
+// RBAC: Hanya admin, pegawai, bendahara
+$canRead = in_array($role, ['admin', 'pegawai', 'bendahara']);
+if (!$canRead) {
+    header("Location: " . BASE_URL . "/unauthorized.php");
+    exit;
+}
+
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-if (!$id) {
+if ($id <= 0) {
     header("Location: " . BASE_URL . "/modules/shared/rincian_biaya/index.php?msg=invalid");
     exit;
 }
 
-// Ambil rincian utama
+// Ambil data rincian
 $stmt = $conn->prepare("
-    SELECT rb.*, p.tujuan, p.tanggal_berangkat, u.nama AS nama_pembuat
+    SELECT rb.*, 
+           p.tujuan, p.tanggal_berangkat, 
+           u.nama AS nama_pembuat,
+           peg.nama AS nama_pegawai
     FROM rincian_biaya rb
     JOIN pengajuan_perjalanan p ON rb.id_pengajuan = p.id
     JOIN user u ON rb.dibuat_oleh = u.id
+    JOIN pegawai peg ON p.id_pegawai = peg.id
     WHERE rb.id = ?
 ");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $rincian = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
 if (!$rincian) {
     header("Location: " . BASE_URL . "/modules/shared/rincian_biaya/index.php?msg=notfound");
     exit;
 }
 
-// Role pegawai hanya boleh melihat miliknya
-if ($role === 'pegawai' && $rincian['dibuat_oleh'] != $id_user) {
+// Pegawai hanya boleh melihat miliknya (id_pemilik)
+if ($role === 'pegawai' && $rincian['id_pemilik'] != $id_user) {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-// Ambil data detail
+// Ambil detail rincian
 $details = $conn->query("
     SELECT * FROM rincian_biaya_detail
     WHERE id_rincian = $id
@@ -70,6 +82,10 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                         <td>: <?= date('d-m-Y', strtotime($rincian['tanggal_rincian'])) ?></td>
                     </tr>
                     <tr>
+                        <th>Nama Pegawai</th>
+                        <td>: <?= htmlspecialchars($rincian['nama_pegawai']) ?></td>
+                    </tr>
+                    <tr>
                         <th>Pembuat</th>
                         <td>: <?= htmlspecialchars($rincian['nama_pembuat']) ?></td>
                     </tr>
@@ -98,11 +114,9 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                         <td>: <strong>Rp <?= number_format($rincian['jumlah_total'], 0, ',', '.') ?></strong></td>
                     </tr>
                 </table>
+
                 <div class="text-end">
-                    <?php if (
-                        in_array($role, ['admin', 'bendahara']) &&
-                        in_array($rincian['status'], ['disetujui', 'selesai'])
-                    ): ?>
+                    <?php if (in_array($role, ['admin', 'bendahara']) && in_array($rincian['status'], ['disetujui', 'selesai'])): ?>
                         <a href="cetak_rincian.php?id=<?= $rincian['id'] ?>" target="_blank" class="btn btn-primary ms-2">
                             <i class="fe fe-printer me-1"></i> Cetak Bukti
                         </a>
@@ -128,11 +142,8 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-                            $no = 1;
-                            while ($d = $details->fetch_assoc()):
-                                $total = $d['jumlah'] * $d['harga_satuan'];
-                            ?>
+                            <?php $no = 1;
+                            while ($d = $details->fetch_assoc()): ?>
                                 <tr>
                                     <td><?= $no++ ?></td>
                                     <td><?= htmlspecialchars($d['jenis_biaya']) ?></td>
@@ -140,7 +151,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                     <td><?= $d['jumlah'] ?></td>
                                     <td><?= htmlspecialchars($d['satuan']) ?></td>
                                     <td>Rp <?= number_format($d['harga_satuan'], 0, ',', '.') ?></td>
-                                    <td>Rp <?= number_format($total, 0, ',', '.') ?></td>
+                                    <td>Rp <?= number_format($d['total'], 0, ',', '.') ?></td>
                                 </tr>
                             <?php endwhile; ?>
                             <?php if ($no === 1): ?>

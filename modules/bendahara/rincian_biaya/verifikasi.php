@@ -31,9 +31,10 @@ if ($result->num_rows === 0) {
 
 //  Lakukan update status sesuai action
 $statusBaru = $action === 'setujui' ? 'disetujui' : 'ditolak';
-$stmtUpdate = $conn->prepare("UPDATE rincian_biaya SET status = ? WHERE id = ?");
-$stmtUpdate->bind_param("si", $statusBaru, $id);
+$stmtUpdate = $conn->prepare("UPDATE rincian_biaya SET status = ?, id_bendahara_verifikasi = ? WHERE id = ?");
+$stmtUpdate->bind_param("sii", $statusBaru, $_SESSION['id_user'], $id);
 $stmtUpdate->execute();
+
 
 //  Redirect kembali dengan pesan
 header("Location: " . BASE_URL . "/modules/shared/rincian_biaya/index.php?msg=$statusBaru");

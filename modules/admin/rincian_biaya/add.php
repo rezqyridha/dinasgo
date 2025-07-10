@@ -39,13 +39,14 @@ $nomor_rincian = generateNomorRincian($conn);
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_pengajuan = (int) $_POST['id_pengajuan'];
+    $id_pengajuan   = (int) $_POST['id_pengajuan'];
     $tanggal_rincian = $_POST['tanggal_rincian'];
-    $detail = $_POST['detail'] ?? [];
+    $detail         = $_POST['detail'] ?? [];
 
     if (!$id_pengajuan || !$tanggal_rincian || count($detail) === 0) {
         $error = 'Pengajuan, tanggal, dan minimal satu rincian wajib diisi.';
     } else {
+        // Cek sinkron: bukti pengeluaran harus ada
         $cekBukti = $conn->prepare("SELECT COUNT(*) AS jml FROM dokumen WHERE id_pengajuan = ? AND jenis = 'bukti_pengeluaran'");
         $cekBukti->bind_param("i", $id_pengajuan);
         $cekBukti->execute();
@@ -54,49 +55,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($resBukti['jml'] < 1) {
             $error = 'Bukti pengeluaran belum diupload oleh pegawai.';
         } else {
-            $valid = true;
-            foreach ($detail as $item) {
-                if (empty($item['jenis_biaya']) || empty($item['jumlah']) || empty($item['satuan']) || empty($item['harga_satuan'])) {
-                    $valid = false;
-                    break;
-                }
-            }
+            //  Ambil id_pemilik dari pengajuan
+            $getPemilik = $conn->prepare("SELECT u.id FROM pengajuan_perjalanan p JOIN pegawai peg ON p.id_pegawai = peg.id JOIN user u ON peg.id_user = u.id WHERE p.id = ?");
+            $getPemilik->bind_param("i", $id_pengajuan);
+            $getPemilik->execute();
+            $pemilik = $getPemilik->get_result()->fetch_assoc();
+            $id_pemilik = $pemilik ? $pemilik['id'] : null;
 
-            if (!$valid) {
-                $error = 'Setiap baris rincian harus diisi lengkap.';
+            if (!$id_pemilik) {
+                $error = 'Gagal menemukan pemilik pengajuan.';
             } else {
-                $total = 0;
+                // Validasi isi detail
+                $valid = true;
                 foreach ($detail as $item) {
-                    $jumlah = (int) $item['jumlah'];
-                    $harga = (float) str_replace('.', '', $item['harga_satuan']);
-                    $total += $jumlah * $harga;
+                    if (
+                        empty($item['jenis_biaya']) || empty($item['jumlah']) ||
+                        empty($item['satuan']) || empty($item['harga_satuan'])
+                    ) {
+                        $valid = false;
+                        break;
+                    }
                 }
 
-                $stmt = $conn->prepare("INSERT INTO rincian_biaya (id_pengajuan, nomor_rincian, tanggal_rincian, jumlah_total, dibuat_oleh) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("issdi", $id_pengajuan, $nomor_rincian, $tanggal_rincian, $total, $id_user);
-                $stmt->execute();
-                $id_rincian = $stmt->insert_id;
+                if (!$valid) {
+                    $error = 'Setiap baris rincian harus diisi lengkap.';
+                } else {
+                    $total = 0;
+                    foreach ($detail as $item) {
+                        $jumlah = (int) $item['jumlah'];
+                        $harga = (float) str_replace('.', '', $item['harga_satuan']);
+                        $total += $jumlah * $harga;
+                    }
 
-                $stmtDetail = $conn->prepare("INSERT INTO rincian_biaya_detail (id_rincian, jenis_biaya, keterangan, jumlah, satuan, harga_satuan) VALUES (?, ?, ?, ?, ?, ?)");
-                foreach ($detail as $item) {
-                    $stmtDetail->bind_param(
-                        "issisd",
-                        $id_rincian,
-                        $item['jenis_biaya'],
-                        $item['keterangan'],
-                        $item['jumlah'],
-                        $item['satuan'],
-                        str_replace('.', '', $item['harga_satuan'])
-                    );
-                    $stmtDetail->execute();
+                    //  Simpan ke rincian_biaya
+                    $stmt = $conn->prepare("
+                        INSERT INTO rincian_biaya 
+                        (id_pengajuan, nomor_rincian, tanggal_rincian, jumlah_total, dibuat_oleh, id_pemilik) 
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->bind_param("issdii", $id_pengajuan, $nomor_rincian, $tanggal_rincian, $total, $id_user, $id_pemilik);
+                    $stmt->execute();
+                    $id_rincian = $stmt->insert_id;
+
+                    // Simpan detail
+                    $stmtDetail = $conn->prepare("
+                        INSERT INTO rincian_biaya_detail 
+                        (id_rincian, jenis_biaya, keterangan, jumlah, satuan, harga_satuan) 
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
+                    foreach ($detail as $item) {
+                        $stmtDetail->bind_param(
+                            "issisd",
+                            $id_rincian,
+                            $item['jenis_biaya'],
+                            $item['keterangan'],
+                            $item['jumlah'],
+                            $item['satuan'],
+                            str_replace('.', '', $item['harga_satuan'])
+                        );
+                        $stmtDetail->execute();
+                    }
+
+                    header("Location: " . BASE_URL . "/modules/shared/rincian_biaya/index.php?msg=added&obj=rincian");
+                    exit;
                 }
-
-                header("Location: " . BASE_URL . "/modules/shared/rincian_biaya/index.php?msg=added&obj=rincian");
-                exit;
             }
         }
     }
 }
+
 
 require_once LAYOUTS_PATH . '/head.php';
 require_once LAYOUTS_PATH . '/header.php';
@@ -228,7 +255,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         });
     });
 
-    // ✅ AJAX Preview Bukti
+    // AJAX Preview Bukti
     document.getElementById('id_pengajuan').addEventListener('change', function() {
         const id = this.value;
         if (id) {

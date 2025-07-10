@@ -7,22 +7,27 @@ $pageTitle = 'Daftar Rincian Biaya Perjalanan';
 $role = $_SESSION['role'];
 $id_user = $_SESSION['id_user'];
 
-$canRead = in_array($role, ['admin', 'pegawai', 'bendahara', 'atasan']);
+// ✅ RBAC: Hanya admin, pegawai, bendahara
+$canRead = in_array($role, ['admin', 'pegawai', 'bendahara']);
 if (!$canRead) {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-// Ambil data rincian berdasarkan role
+// Ambil data rincian sesuai role
 $query = "
-    SELECT rb.*, u.nama AS pembuat, p.tujuan
+    SELECT rb.*, 
+           u.nama AS pembuat, 
+           peg.nama AS nama_pegawai,
+           p.tujuan
     FROM rincian_biaya rb
     JOIN pengajuan_perjalanan p ON rb.id_pengajuan = p.id
     JOIN user u ON rb.dibuat_oleh = u.id
+    JOIN pegawai peg ON p.id_pegawai = peg.id
 ";
 
 if ($role === 'pegawai') {
-    $query .= " WHERE rb.dibuat_oleh = ?";
+    $query .= " WHERE rb.id_pemilik = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $id_user);
     $stmt->execute();
@@ -31,6 +36,7 @@ if ($role === 'pegawai') {
     $query .= " ORDER BY rb.tanggal_rincian DESC";
     $result = $conn->query($query);
 }
+
 
 require_once LAYOUTS_PATH . '/head.php';
 require_once LAYOUTS_PATH . '/header.php';
@@ -64,6 +70,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                 <th>Tanggal</th>
                                 <th>Tujuan</th>
                                 <th>Pembuat</th>
+                                <th>Nama Pegawai</th>
                                 <th>Jumlah Total</th>
                                 <th>Status</th>
                                 <th class="text-center">Aksi</th>
@@ -76,7 +83,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                     <?php
                                     $badge = match ($row['status']) {
                                         'draft' => 'bg-secondary',
-                                        'diajukan' => 'bg-warning ',
+                                        'diajukan' => 'bg-warning',
                                         'disetujui' => 'bg-success',
                                         'ditolak' => 'bg-danger',
                                         'selesai' => 'bg-primary',
@@ -89,42 +96,41 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                         <td><?= date('d-m-Y', strtotime($row['tanggal_rincian'])) ?></td>
                                         <td><?= htmlspecialchars($row['tujuan']) ?></td>
                                         <td><?= htmlspecialchars($row['pembuat']) ?></td>
+                                        <td><?= htmlspecialchars($row['nama_pegawai']) ?></td>
                                         <td>Rp <?= number_format($row['jumlah_total'], 0, ',', '.') ?></td>
                                         <td><span class="badge <?= $badge ?>"><?= ucfirst($row['status']) ?></span></td>
                                         <td class="text-center">
                                             <div class="btn-list d-flex justify-content-center">
-                                                <a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info me-1" title="Lihat Detail">
+                                                <a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info me-1">
                                                     <i class="fe fe-eye"></i>
                                                 </a>
 
                                                 <?php if ($role === 'admin' && $row['status'] === 'draft'): ?>
-                                                    <a href="<?= BASE_URL ?>/modules/admin/rincian_biaya/edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning me-1" title="Edit Rincian">
+                                                    <a href="<?= BASE_URL ?>/modules/admin/rincian_biaya/edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning me-1">
                                                         <i class="fe fe-edit"></i>
                                                     </a>
-                                                    <a href="<?= BASE_URL ?>/modules/admin/rincian_biaya/ajukan.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-success me-1" title="Ajukan Rincian">
+                                                    <a href="<?= BASE_URL ?>/modules/admin/rincian_biaya/ajukan.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-success me-1">
                                                         <i class="fe fe-send"></i>
                                                     </a>
-                                                    <button onclick="confirmDelete('<?= BASE_URL ?>/modules/admin/rincian_biaya/delete.php?id=<?= $row['id'] ?>')" class="btn btn-sm btn-danger" title="Hapus Rincian">
+                                                    <button onclick="confirmDelete('<?= BASE_URL ?>/modules/admin/rincian_biaya/delete.php?id=<?= $row['id'] ?>')" class="btn btn-sm btn-danger">
                                                         <i class="fe fe-trash-2"></i>
                                                     </button>
                                                 <?php endif; ?>
 
                                                 <?php if ($role === 'bendahara' && $row['status'] === 'diajukan'): ?>
-                                                    <a href="<?= BASE_URL ?>/modules/bendahara/rincian_biaya/verifikasi.php?id=<?= $row['id'] ?>&action=setujui" class="btn btn-sm btn-success me-1" title="Setujui">
+                                                    <a href="<?= BASE_URL ?>/modules/bendahara/rincian_biaya/verifikasi.php?id=<?= $row['id'] ?>&action=setujui" class="btn btn-sm btn-success me-1">
                                                         <i class="fe fe-check"></i>
                                                     </a>
-                                                    <a href="<?= BASE_URL ?>/modules/bendahara/rincian_biaya/verifikasi.php?id=<?= $row['id'] ?>&action=tolak" class="btn btn-sm btn-danger" title="Tolak">
+                                                    <a href="<?= BASE_URL ?>/modules/bendahara/rincian_biaya/verifikasi.php?id=<?= $row['id'] ?>&action=tolak" class="btn btn-sm btn-danger">
                                                         <i class="fe fe-x"></i>
                                                     </a>
                                                 <?php endif; ?>
 
                                                 <?php if (in_array($role, ['admin', 'bendahara']) && in_array($row['status'], ['disetujui', 'selesai'])): ?>
-                                                    <a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/cetak_rincian.php?id=<?= $row['id'] ?>" target="_blank" class="btn btn-sm btn-dark me-1" title="Cetak PDF">
+                                                    <a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/cetak_rincian.php?id=<?= $row['id'] ?>" target="_blank" class="btn btn-sm btn-dark">
                                                         <i class="fe fe-printer"></i>
                                                     </a>
                                                 <?php endif; ?>
-
-
                                             </div>
                                         </td>
                                     </tr>
