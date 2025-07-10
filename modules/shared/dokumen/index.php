@@ -30,15 +30,19 @@ if ($role === 'pegawai') {
     $stmt->execute();
     $result = $stmt->get_result();
 } elseif ($role === 'atasan') {
-    // Ambil semua dokumen pegawainya (sesuai logika atasan)
+    // Ambil semua dokumen pegawainya (bawahan)
     $query = "
         SELECT d.*, pp.tujuan, peg.nama AS nama_pegawai
         FROM dokumen d
         JOIN pengajuan_perjalanan pp ON d.id_pengajuan = pp.id
         JOIN pegawai peg ON pp.id_pegawai = peg.id
+        WHERE peg.id_atasan = ?
         ORDER BY d.uploaded_at DESC
     ";
-    $result = $conn->query($query);
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $id_user);  // id_user di sini adalah atasan login
+    $stmt->execute();
+    $result = $stmt->get_result();
 } else {
     // Admin: lihat semua
     $query = "
@@ -95,7 +99,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                     <tr>
                                         <td><?= $no++ ?></td>
                                         <td>
-                                            <a href="<?= BASE_URL ?>/uploads/dokumen/<?= htmlspecialchars($row['nama_file']) ?>" target="_blank">
+                                            <a href="<?= BASE_URL ?>/uploads/dokumen/<?= (int)$row['id_pengajuan'] ?>/<?= htmlspecialchars($row['nama_file']) ?>" ...>
                                                 <?= htmlspecialchars($row['nama_file']) ?>
                                             </a>
                                         </td>
@@ -106,13 +110,18 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                             echo htmlspecialchars(ucwords($jenis));
                                             ?>
                                         </td>
-                                        <td><?= htmlspecialchars($row['tujuan']) ?></td>
+                                        <td>
+                                            <a href="<?= BASE_URL ?>/modules/shared/dokumen/detail_pengajuan.php?id_pengajuan=<?= (int)$row['id_pengajuan'] ?>"
+                                                title="Lihat Detail Pengajuan">
+                                                <?= htmlspecialchars($row['tujuan']) ?>
+                                            </a>
+                                        </td>
                                         <td><?= htmlspecialchars($row['nama_pegawai']) ?></td>
                                         <td><?= date('d-m-Y H:i', strtotime($row['uploaded_at'])) ?></td>
                                         <td class="text-center">
                                             <div class="btn-list d-flex justify-content-center">
                                                 <a href="<?= BASE_URL ?>/modules/shared/dokumen/detail.php?id=<?= $row['id'] ?>"
-                                                    class="btn btn-sm btn-secondary me-1" title="Detail">
+                                                    class="btn btn-sm btn-info me-1" title="Detail">
                                                     <i class="fe fe-eye"></i>
                                                 </a>
                                                 <?php if ($role === 'admin'): ?>

@@ -15,11 +15,11 @@ if ($id <= 0) {
     exit;
 }
 
-//  Ambil data file
-$stmt = $conn->prepare("SELECT nama_file FROM dokumen WHERE id = ?");
+// Ambil data file + folder pengajuan
+$stmt = $conn->prepare("SELECT id_pengajuan, nama_file FROM dokumen WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
-$stmt->bind_result($nama_file);
+$stmt->bind_result($id_pengajuan, $nama_file);
 $stmt->fetch();
 $stmt->close();
 
@@ -28,13 +28,13 @@ if (!$nama_file) {
     exit;
 }
 
-//  Hapus file di folder uploads/dokumen/
-$filePath = dirname(__DIR__, 3) . "/uploads/dokumen/" . $nama_file;
+// Hapus file fisik
+$filePath = dirname(__DIR__, 3) . "/uploads/dokumen/{$id_pengajuan}/" . $nama_file;
 if (file_exists($filePath)) {
     unlink($filePath);
 }
 
-//  Hapus data di DB
+// Hapus data di DB
 $stmtDel = $conn->prepare("DELETE FROM dokumen WHERE id = ?");
 $stmtDel->bind_param("i", $id);
 if ($stmtDel->execute()) {

@@ -17,7 +17,7 @@ if ($id <= 0) {
     exit;
 }
 
-// ✅ Ambil data lama
+// ✅ Ambil data lama (termasuk id_pengajuan!)
 $stmt = $conn->prepare("
   SELECT d.*, pp.tujuan, pp.tanggal_berangkat, peg.nama AS nama_pegawai
   FROM dokumen d
@@ -50,24 +50,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fileName = $data['nama_file']; // default: file lama
 
         if ($newFileUploaded) {
-            $upload_dir = dirname(__DIR__, 3) . "/uploads/dokumen/";
+            $upload_dir = dirname(__DIR__, 3) . "/uploads/dokumen/{$data['id_pengajuan']}/";
             if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
+                mkdir($upload_dir, 0755, true);
             }
 
-            $tmpName = $_FILES['file']['tmp_name'];
-            $newName = time() . '_' . basename($_FILES['file']['name']);
-            $targetPath = $upload_dir . $newName;
+            $allowed_ext = ['pdf', 'docx'];
+            $max_size = 5 * 1024 * 1024;
 
-            if (move_uploaded_file($tmpName, $targetPath)) {
-                // Hapus file lama
-                $oldPath = $upload_dir . $data['nama_file'];
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
-                }
-                $fileName = $newName;
+            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed_ext)) {
+                $error = "Format file tidak valid.";
+            } elseif ($_FILES['file']['size'] > $max_size) {
+                $error = "Ukuran file melebihi batas 5MB.";
             } else {
-                $error = "Gagal upload file baru.";
+                $tmpName = $_FILES['file']['tmp_name'];
+                $safeName = preg_replace("/[^A-Za-z0-9_\-\.]/", "_", basename($_FILES['file']['name']));
+                $newName = time() . '_' . $safeName;
+                $targetPath = $upload_dir . $newName;
+
+                if (move_uploaded_file($tmpName, $targetPath)) {
+                    // Hapus file lama
+                    $oldPath = $upload_dir . $data['nama_file'];
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
+                    $fileName = $newName;
+                } else {
+                    $error = "Gagal upload file baru.";
+                }
             }
         }
 
@@ -114,15 +125,15 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                         <select name="jenis" class="form-select" required>
                             <option value="">-- Pilih Jenis --</option>
                             <option value="surat_tugas" <?= $input['jenis'] === 'surat_tugas' ? 'selected' : '' ?>>Surat Tugas</option>
-                            <option value="undangan" <?= $input['jenis'] === 'undangan' ? 'selected' : '' ?>>Undangan</option>
-                            <option value="revisi" <?= $input['jenis'] === 'revisi' ? 'selected' : '' ?>>Revisi</option>
+                            <option value="bukti_pengeluaran" <?= $input['jenis'] === 'bukti_pengeluaran' ? 'selected' : '' ?>>Bukti Pengeluaran</option>
+                            <option value="sppd" <?= $input['jenis'] === 'sppd' ? 'selected' : '' ?>>SPPD</option>
                             <option value="lainnya" <?= $input['jenis'] === 'lainnya' ? 'selected' : '' ?>>Lainnya</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">File Lama</label><br>
-                        <a href="<?= BASE_URL ?>/uploads/dokumen/<?= htmlspecialchars($data['nama_file']) ?>" target="_blank">
+                        <a href="<?= BASE_URL ?>/uploads/dokumen/<?= $data['id_pengajuan'] ?>/<?= htmlspecialchars($data['nama_file']) ?>" target="_blank">
                             <?= htmlspecialchars($data['nama_file']) ?>
                         </a>
                     </div>
@@ -130,7 +141,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                     <div class="mb-3">
                         <label class="form-label">Ganti File (Opsional)</label>
                         <input type="file" name="file" class="form-control">
-                        <small class="text-muted">Kosongkan jika tidak ingin ganti file.</small>
+                        <small class="text-muted">Kosongkan jika tidak ingin ganti file. Hanya PDF/DOCX max 5MB.</small>
                     </div>
 
                     <div class="d-flex justify-content-between">
