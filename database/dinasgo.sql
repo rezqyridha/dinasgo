@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `dokumen` (
   CONSTRAINT `dokumen_ibfk_2` FOREIGN KEY (`id_user`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.dokumen: ~0 rows (approximately)
+-- Dumping data for table dinasgo.dokumen: ~3 rows (approximately)
 INSERT INTO `dokumen` (`id`, `id_pengajuan`, `id_user`, `nama_file`, `jenis`, `uploaded_at`) VALUES
 	(2, 1, 2, '1752134221_sppd.pdf', 'sppd', '2025-07-10 07:57:01'),
 	(3, 1, 2, '1752134236_dokumen_relevan_lainnya.pdf', 'lainnya', '2025-07-10 07:57:16'),
@@ -57,7 +57,9 @@ CREATE TABLE IF NOT EXISTS `evaluasi_perjalanan` (
   CONSTRAINT `evaluasi_perjalanan_ibfk_2` FOREIGN KEY (`id_pegawai`) REFERENCES `pegawai` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.evaluasi_perjalanan: ~0 rows (approximately)
+-- Dumping data for table dinasgo.evaluasi_perjalanan: ~1 rows (approximately)
+INSERT INTO `evaluasi_perjalanan` (`id`, `id_pengajuan`, `id_pegawai`, `status`, `kendala`, `hasil`, `saran`, `lampiran`) VALUES
+	(3, 1, 1, 'selesai', 'Terjadi keterlambatan transportasi akibat cuaca buruk.', 'Kegiatan kunjungan kerja tetap terlaksana meskipun ada penyesuaian jadwal.', 'Melakukan koordinasi transportasi lebih awal dan menyiapkan rencana alternatif.', '1752164749_dummy_evaluasi_perjalanan.pdf');
 
 -- Dumping structure for table dinasgo.kepala
 CREATE TABLE IF NOT EXISTS `kepala` (
@@ -71,7 +73,7 @@ CREATE TABLE IF NOT EXISTS `kepala` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.kepala: ~0 rows (approximately)
+-- Dumping data for table dinasgo.kepala: ~1 rows (approximately)
 INSERT INTO `kepala` (`id`, `nama`, `nip`, `jabatan`, `ttd_gambar`, `tahun`, `created_at`) VALUES
 	(1, 'Dr. Ir. Sutrisno, MT', '196504011993031001', 'Kepala Balai Wilayah Sungai', 'ttd_sutrisno.png', '2025', '2025-06-25 07:21:21');
 
@@ -127,17 +129,23 @@ CREATE TABLE IF NOT EXISTS `pencairan_dana` (
   `id_bendahara` int NOT NULL,
   `jumlah_dana` varchar(50) DEFAULT NULL,
   `tanggal_pencairan` date DEFAULT NULL,
+  `tanggal_finalisasi` date DEFAULT NULL,
+  `id_admin_finalisasi` int DEFAULT NULL,
   `status` enum('draft','dicairkan','selesai') DEFAULT 'draft',
   PRIMARY KEY (`id`),
   KEY `id_pengajuan` (`id_pengajuan`),
   KEY `id_bendahara` (`id_bendahara`),
   KEY `fk_pencairan_rincian` (`id_rincian_biaya`),
+  KEY `fk_pencairan_admin_finalisasi` (`id_admin_finalisasi`),
+  CONSTRAINT `fk_pencairan_admin_finalisasi` FOREIGN KEY (`id_admin_finalisasi`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_pencairan_rincian` FOREIGN KEY (`id_rincian_biaya`) REFERENCES `rincian_biaya` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `pencairan_dana_ibfk_1` FOREIGN KEY (`id_pengajuan`) REFERENCES `pengajuan_perjalanan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `pencairan_dana_ibfk_2` FOREIGN KEY (`id_bendahara`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.pencairan_dana: ~0 rows (approximately)
+-- Dumping data for table dinasgo.pencairan_dana: ~1 rows (approximately)
+INSERT INTO `pencairan_dana` (`id`, `id_pengajuan`, `id_rincian_biaya`, `id_bendahara`, `jumlah_dana`, `tanggal_pencairan`, `tanggal_finalisasi`, `id_admin_finalisasi`, `status`) VALUES
+	(2, 1, 4, 4, '5.000.000', '2025-08-02', '2025-08-04', 1, 'selesai');
 
 -- Dumping structure for table dinasgo.pengajuan_perjalanan
 CREATE TABLE IF NOT EXISTS `pengajuan_perjalanan` (
@@ -159,7 +167,7 @@ CREATE TABLE IF NOT EXISTS `pengajuan_perjalanan` (
   CONSTRAINT `pengajuan_perjalanan_ibfk_1` FOREIGN KEY (`id_pegawai`) REFERENCES `pegawai` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.pengajuan_perjalanan: ~0 rows (approximately)
+-- Dumping data for table dinasgo.pengajuan_perjalanan: ~2 rows (approximately)
 INSERT INTO `pengajuan_perjalanan` (`id`, `id_pegawai`, `tujuan`, `tanggal_berangkat`, `tanggal_kembali`, `keperluan`, `estimasi_biaya`, `status`, `diverifikasi_oleh`, `catatan_verifikasi`, `created_at`) VALUES
 	(1, 1, 'Hulu Sungai', '2025-07-14', '2025-07-18', 'Sosialisai Aplikasi DinasGO', 5000000.00, 'disetujui', 3, 'Disetujui karena mendukung target kegiatan', '2025-07-08 10:49:14'),
 	(2, 1, 'Banjarmasin', '2025-07-07', '2025-07-09', 'Sosialiasasi aplikasi dinasgo', 2500000.00, 'diajukan', NULL, NULL, '2025-07-10 06:22:48');
@@ -179,7 +187,7 @@ CREATE TABLE IF NOT EXISTS `persetujuan` (
   CONSTRAINT `persetujuan_ibfk_2` FOREIGN KEY (`id_verifikator`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.persetujuan: ~0 rows (approximately)
+-- Dumping data for table dinasgo.persetujuan: ~1 rows (approximately)
 INSERT INTO `persetujuan` (`id`, `id_pengajuan`, `id_verifikator`, `catatan`, `status`, `tanggal_persetujuan`) VALUES
 	(1, 1, 3, 'Disetujui karena mendukung target kegiatan', 'disetujui', '2025-07-08');
 
@@ -227,7 +235,7 @@ CREATE TABLE IF NOT EXISTS `rincian_biaya_detail` (
   CONSTRAINT `rincian_biaya_detail_ibfk_1` FOREIGN KEY (`id_rincian`) REFERENCES `rincian_biaya` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.rincian_biaya_detail: ~0 rows (approximately)
+-- Dumping data for table dinasgo.rincian_biaya_detail: ~4 rows (approximately)
 INSERT INTO `rincian_biaya_detail` (`id`, `id_rincian`, `jenis_biaya`, `keterangan`, `jumlah`, `satuan`, `harga_satuan`) VALUES
 	(1, 4, 'Transportasi', ' Perjalanan dinas ke luar kota', 2, 'orang', 1000000.00),
 	(2, 4, 'Penginapan ', 'Hotel 2 malam ', 2, 'malam ', 750000.00),
@@ -246,7 +254,7 @@ CREATE TABLE IF NOT EXISTS `sppd` (
   CONSTRAINT `sppd_ibfk_1` FOREIGN KEY (`id_pengajuan`) REFERENCES `pengajuan_perjalanan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.sppd: ~0 rows (approximately)
+-- Dumping data for table dinasgo.sppd: ~1 rows (approximately)
 INSERT INTO `sppd` (`id`, `id_pengajuan`, `nomor_sppd`, `tanggal_terbit`, `catatan`) VALUES
 	(1, 1, 'SPPD/001/2025', '2025-07-12', 'Koordinasi dengan pihak terkait di lokasi tujuan.');
 
@@ -286,7 +294,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table dinasgo.user: ~5 rows (approximately)
+-- Dumping data for table dinasgo.user: ~6 rows (approximately)
 INSERT INTO `user` (`id`, `nama`, `username`, `password`, `role`, `status`) VALUES
 	(1, 'Admin Utama', 'admin01', 'admin123', 'admin', 'aktif'),
 	(2, 'Rina Ayu', 'pegawai01', 'user123', 'pegawai', 'aktif'),

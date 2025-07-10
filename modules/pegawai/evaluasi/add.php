@@ -7,13 +7,13 @@ $pageTitle = 'Tambah Evaluasi Perjalanan';
 $role = $_SESSION['role'] ?? '';
 $id_user = $_SESSION['id_user'] ?? 0;
 
-// Hanya pegawai yang bisa tambah
+// Hanya pegawai yang bisa akses
 if ($role !== 'pegawai') {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-// Ambil ID Pegawai
+// Ambil ID Pegawai aktif
 $stmt = $conn->prepare("SELECT id FROM pegawai WHERE id_user = ?");
 $stmt->bind_param("i", $id_user);
 $stmt->execute();
@@ -21,7 +21,7 @@ $stmt->bind_result($id_pegawai);
 $stmt->fetch();
 $stmt->close();
 
-// Query pengajuan valid
+// Ambil pengajuan valid yang sudah lengkap
 $stmt = $conn->prepare("
     SELECT pp.id, pp.tujuan, pp.tanggal_berangkat
     FROM pengajuan_perjalanan pp
@@ -53,46 +53,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $lampiran = $_FILES['lampiran'] ?? null;
 
     if (
-        $input['id_pengajuan'] === '' ||
-        $input['kendala'] === '' ||
-        $input['hasil'] === '' ||
-        $input['saran'] === '' ||
+        empty($input['id_pengajuan']) ||
+        empty($input['kendala']) ||
+        empty($input['hasil']) ||
+        empty($input['saran']) ||
         empty($lampiran['name'])
     ) {
         $error = "Semua field wajib diisi dan lampiran harus dipilih.";
     } else {
-        // Simpan lampiran
-        $upload_dir = dirname(__DIR__, 3) . "/uploads/evaluasi/";
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-
-        $fileName = time() . '_' . basename($lampiran['name']);
-        $targetPath = $upload_dir . $fileName;
-
-        if (move_uploaded_file($lampiran['tmp_name'], $targetPath)) {
-            $stmt = $conn->prepare("
-                INSERT INTO evaluasi_perjalanan (id_pengajuan, id_pegawai, kendala, hasil, saran, status, lampiran)
-                VALUES (?, ?, ?, ?, ?, 'draft', ?)
-            ");
-            $stmt->bind_param(
-                "iissss",
-                $input['id_pengajuan'],
-                $id_pegawai,
-                $input['kendala'],
-                $input['hasil'],
-                $input['saran'],
-                $fileName
-            );
-
-            if ($stmt->execute()) {
-                header("Location: " . BASE_URL . "/modules/shared/evaluasi_perjalanan/index.php?msg=added&obj=evaluasi");
-                exit;
-            } else {
-                $error = "Gagal menyimpan evaluasi.";
-            }
+        // Validasi file lampiran (hanya PDF/DOCX)
+        $allowed_ext = ['pdf', 'doc', 'docx'];
+        $ext = strtolower(pathinfo($lampiran['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowed_ext)) {
+            $error = "Lampiran hanya boleh PDF atau DOCX.";
         } else {
-            $error = "Gagal mengunggah lampiran.";
+            // Simpan file lampiran
+            $upload_dir = dirname(__DIR__, 3) . "/uploads/evaluasi/";
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $fileName = time() . '_' . basename($lampiran['name']);
+            $targetPath = $upload_dir . $fileName;
+
+            if (move_uploaded_file($lampiran['tmp_name'], $targetPath)) {
+                $stmt = $conn->prepare("
+                    INSERT INTO evaluasi_perjalanan 
+                    (id_pengajuan, id_pegawai, kendala, hasil, saran, status, lampiran)
+                    VALUES (?, ?, ?, ?, ?, 'draft', ?)
+                ");
+                $stmt->bind_param(
+                    "iissss",
+                    $input['id_pengajuan'],
+                    $id_pegawai,
+                    $input['kendala'],
+                    $input['hasil'],
+                    $input['saran'],
+                    $fileName
+                );
+
+                if ($stmt->execute()) {
+                    header("Location: " . BASE_URL . "/modules/shared/evaluasi/index.php?msg=added&obj=evaluasi");
+                    exit;
+                } else {
+                    $error = "Gagal menyimpan evaluasi. Coba lagi.";
+                }
+            } else {
+                $error = "Gagal mengunggah lampiran.";
+            }
         }
     }
 }
@@ -105,7 +113,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
 
 <div class="main-content app-content">
     <div class="container-fluid">
-        <h4 class="mb-4"><?= htmlspecialchars($pageTitle) ?></h4>
+        <h4 class="mb-4 mt-4"><?= htmlspecialchars($pageTitle) ?></h4>
 
         <?php if ($error): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
@@ -144,14 +152,14 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                     <div class="mb-3">
                         <label class="form-label">Lampiran (PDF/DOCX)</label>
                         <input type="file" name="lampiran" class="form-control" required>
-                        <small class="text-muted">File harus PDF/DOCX. Simpan di folder uploads/evaluasi/.</small>
+                        <small class="text-muted">File harus berformat PDF atau DOCX.</small>
                     </div>
 
                     <div class="d-flex justify-content-between">
                         <button type="submit" class="btn btn-primary">
                             <i class="fe fe-save me-1"></i> Simpan
                         </button>
-                        <a href="<?= BASE_URL ?>/modules/shared/evaluasi_perjalanan/index.php" class="btn btn-secondary">Batal</a>
+                        <a href="<?= BASE_URL ?>/modules/shared/evaluasi/index.php" class="btn btn-secondary">Batal</a>
                     </div>
                 </form>
             </div>
