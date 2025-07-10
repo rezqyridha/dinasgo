@@ -7,20 +7,28 @@ $pageTitle = 'Tambah Pencairan Dana';
 $role = $_SESSION['role'] ?? '';
 $id_user = $_SESSION['id_user'] ?? 0;
 
-// Proteksi hanya untuk bendahara
+// Proteksi hanya bendahara
 if ($role !== 'bendahara') {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
+// Helper untuk bersihkan format rupiah
+function cleanRupiah($nominal)
+{
+    $clean = str_replace(['Rp', ' ', '.'], '', $nominal);
+    return str_replace(',00', '', $clean);
+}
+
 $error = '';
 $input = [
     'id_pengajuan' => '',
+    'id_rincian_biaya' => '',
     'jumlah_dana' => '',
-    'tanggal_pencairan' => ''
+    'tanggal_pencairan' => date('Y-m-01') // default GU tgl 1 bulan ini
 ];
 
-// Ambil daftar pengajuan yang sudah diverifikasi, punya rincian biaya disetujui, dan belum dicairkan
+// Ambil daftar pengajuan yang valid
 $pengajuan = $conn->query("
     SELECT p.id, peg.nama, p.tujuan, p.tanggal_berangkat
     FROM pengajuan_perjalanan p
@@ -40,18 +48,17 @@ $pengajuan = $conn->query("
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($input as $key => $_) {
         $input[$key] = trim($_POST[$key] ?? '');
-
-        if ($key === 'jumlah_dana') {
-            // Hapus "Rp" dan spasi, simpan tetap dalam format 250.000,00
-            $input[$key] = str_replace(['Rp', ' '], '', $input[$key]);
-        }
     }
+
+    // Bersihkan format rupiah
+    $raw = cleanRupiah($input['jumlah_dana']);
+    $input['jumlah_dana'] = number_format((int) $raw, 0, ',', '.');
 
     if (in_array('', $input)) {
         $error = "Semua field wajib diisi.";
     } else {
-        $stmt = $conn->prepare("INSERT INTO pencairan_dana (id_pengajuan, id_bendahara, jumlah_dana, tanggal_pencairan) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("iiss", $input['id_pengajuan'], $id_user, $input['jumlah_dana'], $input['tanggal_pencairan']);
+        $stmt = $conn->prepare("INSERT INTO pencairan_dana (id_pengajuan, id_rincian_biaya, id_bendahara, jumlah_dana, tanggal_pencairan) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiiss", $input['id_pengajuan'], $input['id_rincian_biaya'], $id_user, $input['jumlah_dana'], $input['tanggal_pencairan']);
 
         if ($stmt->execute()) {
             header("Location: " . BASE_URL . "/modules/shared/pencairan_dana/index.php?msg=added&obj=pencairan");
@@ -86,7 +93,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                             <option value="">-- Pilih Pengajuan --</option>
                             <?php while ($row = $pengajuan->fetch_assoc()): ?>
                                 <option value="<?= $row['id'] ?>" <?= $input['id_pengajuan'] == $row['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($row['nama']) ?> - Tujuan Ke(<?= htmlspecialchars($row['tujuan']) ?>) - (<?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?>)
+                                    <?= htmlspecialchars($row['nama']) ?> - Tujuan (<?= htmlspecialchars($row['tujuan']) ?>) - <?= date('d-m-Y', strtotime($row['tanggal_berangkat'])) ?>
                                 </option>
                             <?php endwhile; ?>
                         </select>
@@ -105,9 +112,12 @@ require_once LAYOUTS_PATH . '/sidebar.php';
 
                         <div class="mb-3">
                             <label class="form-label">Detail Rincian</label>
-                            <div id="detail_rincian" class="border p-2 bg-light rounded" style="font-size: 14px;"></div>
+                            <div id="detail_rincian" class="border p-2 bg-light rounded small"></div>
                         </div>
                     </div>
+
+                    <input type="hidden" name="id_rincian_biaya" id="id_rincian_biaya">
+
                     <div class="mb-3">
                         <label for="jumlah_dana" class="form-label">Jumlah Dana Dicairkan</label>
                         <input type="text" name="jumlah_dana" id="jumlah_dana" class="form-control" value="<?= htmlspecialchars($input['jumlah_dana']) ?>" required>
@@ -144,9 +154,9 @@ require_once LAYOUTS_PATH . '/scripts.php';
                     document.getElementById("info_pengajuan").style.display = "block";
                     document.getElementById("estimasi_biaya").value = "Rp " + data.estimasi;
                     document.getElementById("rincian_total").value = "Rp " + data.total;
-                    let nominalFormatted = formatRupiah(String(Math.round(data.total_raw)));
-                    document.getElementById("jumlah_dana").value = nominalFormatted;
+                    document.getElementById("jumlah_dana").value = formatRupiah(String(Math.round(data.total_raw)));
                     document.getElementById("detail_rincian").innerHTML = data.detail_html;
+                    document.getElementById("id_rincian_biaya").value = data.id_rincian;
                 }
             });
     }

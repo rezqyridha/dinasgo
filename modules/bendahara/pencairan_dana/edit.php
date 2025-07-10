@@ -44,6 +44,12 @@ if (!$data) {
     exit;
 }
 
+// Cegah edit jika status sudah dicairkan/selesai
+if (in_array($data['status'], ['dicairkan', 'selesai'])) {
+    header("Location: " . BASE_URL . "/modules/shared/pencairan_dana/index.php?msg=forbidden_edit&obj=pencairan");
+    exit;
+}
+
 $input['jumlah_dana'] = $data['jumlah_dana'];
 $input['tanggal_pencairan'] = $data['tanggal_pencairan'];
 
@@ -53,11 +59,17 @@ $stmtDetail->bind_param("i", $data['id_rincian']);
 $stmtDetail->execute();
 $detail = $stmtDetail->get_result();
 
+// Helper DRY
+function cleanRupiah($nominal)
+{
+    $clean = str_replace(['Rp', ' ', '.'], '', $nominal);
+    return str_replace(',00', '', $clean);
+}
+
 // Proses update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $raw = str_replace(['Rp', ' ', ',00'], '', $_POST['jumlah_dana']);
-    $formatted = number_format((int) str_replace('.', '', $raw), 0, ',', '.');
-    $input['jumlah_dana'] = $formatted;
+    $raw = cleanRupiah($_POST['jumlah_dana']);
+    $input['jumlah_dana'] = number_format((int) $raw, 0, ',', '.');
     $input['tanggal_pencairan'] = trim($_POST['tanggal_pencairan']);
 
     if (in_array('', $input)) {
@@ -141,7 +153,6 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         </div>
     </div>
 </div>
-
 
 <?php
 require_once LAYOUTS_PATH . '/footer.php';

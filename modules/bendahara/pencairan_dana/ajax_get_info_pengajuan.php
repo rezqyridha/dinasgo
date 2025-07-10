@@ -46,7 +46,11 @@ $id_rincian = $rowRincian['id'];
 $jumlah_total = $rowRincian['jumlah_total'];
 
 // Ambil rincian detail
-$stmt3 = $conn->prepare("SELECT jenis_biaya, jumlah, satuan, harga_satuan FROM rincian_biaya_detail WHERE id_rincian = ?");
+$stmt3 = $conn->prepare("
+    SELECT jenis_biaya, jumlah, satuan, harga_satuan 
+    FROM rincian_biaya_detail 
+    WHERE id_rincian = ?
+");
 $stmt3->bind_param("i", $id_rincian);
 $stmt3->execute();
 $result3 = $stmt3->get_result();
@@ -62,12 +66,13 @@ while ($row = $result3->fetch_assoc()) {
 }
 $detail_html .= '</ul>';
 
-// Kirim response
+// Kirim response lengkap
 $response = [
     'success' => true,
     'estimasi' => number_format($estimasi, 0, ',', '.'),
     'total' => number_format($jumlah_total, 0, ',', '.'),
     'total_raw' => $jumlah_total,
+    'id_rincian' => $id_rincian, // penting untuk form hidden input
     'detail_html' => $detail_html
 ];
 

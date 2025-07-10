@@ -17,14 +17,20 @@ if ($id <= 0) {
     exit;
 }
 
-// Cek data ada atau tidak
-$stmt = $conn->prepare("SELECT id FROM pencairan_dana WHERE id = ?");
+// Cek data dan status
+$stmt = $conn->prepare("SELECT status FROM pencairan_dana WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
     header("Location: " . BASE_URL . "/modules/shared/pencairan_dana/index.php?msg=not_found&obj=pencairan");
+    exit;
+}
+
+$status = $result->fetch_assoc()['status'];
+if (in_array($status, ['dicairkan', 'selesai'])) {
+    header("Location: " . BASE_URL . "/modules/shared/pencairan_dana/index.php?msg=forbidden_delete&obj=pencairan");
     exit;
 }
 
