@@ -1,15 +1,16 @@
-// notifier.js - Standarisasi Notifikasi untuk semua modul DinasGo
+// notifier.js - Standarisasi Notifikasi SweetAlert untuk DinasGo
+
 document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
     const msg = params.get("msg");
-    const obj = params.get("obj") ?? "data"; // default: "data"
+    const obj = params.get("obj") ?? "data"; // default fallback
 
     const notifications = {
-        // === SUCCESS MESSAGES ===
+        // === SUCCESS ===
         success: {
             icon: "success",
             title: "Berhasil",
-            text: `Operasi pada ${obj} berhasil dilakukan.`,
+            text: `${capitalize(obj)} berhasil diproses.`,
         },
         added: {
             icon: "success",
@@ -26,103 +27,79 @@ document.addEventListener("DOMContentLoaded", () => {
             title: "Data Dihapus",
             text: `${capitalize(obj)} berhasil dihapus.`,
         },
-        verifikasi_berhasil: {
+        verified_draft: {
             icon: "success",
-            title: "Pengajuan Diverifikasi",
-            text: `Status pengajuan berhasil diperbarui oleh admin.`,
+            title: "Verifikasi Cairkan",
+            text: `Pencairan dana berhasil diverifikasi oleh bendahara.`,
         },
-        verifikasi_atasan_berhasil: {
+        finalized: {
             icon: "success",
-            title: "Verifikasi Atasan",
-            text: `Pengajuan berhasil diverifikasi oleh atasan.`,
-        },
-        disetujui: {
-            icon: "success",
-            title: "Rincian Disetujui",
-            text: "Rincian biaya berhasil disetujui oleh bendahara.",
+            title: "Finalisasi Berhasil",
+            text: `Pencairan dana telah difinalisasi oleh admin.`,
         },
         diajukan: {
             icon: "success",
-            title: "Rincian Diajukan",
-            text: "Rincian biaya berhasil diajukan ke bendahara.",
+            title: "Diajukan",
+            text: `${capitalize(obj)} berhasil diajukan.`,
+        },
+        disetujui: {
+            icon: "success",
+            title: "Disetujui",
+            text: `${capitalize(obj)} berhasil disetujui.`,
         },
 
-        // === ERROR / FAILED ===
+        // === ERROR ===
         error: {
             icon: "error",
             title: "Gagal",
-            text: `Terjadi kesalahan saat memproses ${obj}.`,
-        },
-        failed: {
-            icon: "error",
-            title: "Gagal Menyimpan",
-            text: `${capitalize(obj)} tidak dapat disimpan ke database.`,
+            text: `Terjadi kesalahan pada ${obj}.`,
         },
         unauthorized: {
             icon: "error",
             title: "Akses Ditolak",
-            text: `Anda tidak memiliki izin untuk mengakses ${obj}.`,
+            text: `Anda tidak memiliki izin mengakses ${obj}.`,
+        },
+        failed: {
+            icon: "error",
+            title: "Gagal Menyimpan",
+            text: `${capitalize(obj)} tidak dapat disimpan.`,
         },
         fk_blocked: {
             icon: "error",
             title: "Tidak Bisa Dihapus",
-            text: `${capitalize(obj)} terkait dengan data lain (relasi aktif).`,
+            text: `${capitalize(obj)} terhubung ke data lain.`,
         },
-        ditolak: {
+        forbidden_status: {
             icon: "error",
-            title: "Rincian Ditolak",
-            text: "Rincian biaya telah ditolak oleh bendahara.",
+            title: "Status Tidak Valid",
+            text: `Status ${obj} tidak dapat diverifikasi.`,
         },
 
         // === WARNING ===
-        kosong: {
+        invalid_id: {
             icon: "warning",
-            title: "Form Tidak Lengkap",
-            text: `Mohon lengkapi semua field pada ${obj}.`,
+            title: "ID Tidak Valid",
+            text: `Parameter ID ${obj} tidak valid.`,
+        },
+        not_found: {
+            icon: "warning",
+            title: "Data Tidak Ditemukan",
+            text: `${capitalize(obj)} tidak ditemukan.`,
+        },
+        invalid_date: {
+            icon: "warning",
+            title: "Tanggal Tidak Valid",
+            text: `Tanggal yang dimasukkan tidak valid.`,
         },
         duplicate: {
             icon: "warning",
-            title: "Duplikat",
-            text: `${capitalize(obj)} sudah ada sebelumnya.`,
+            title: "Duplikat Data",
+            text: `${capitalize(obj)} sudah ada.`,
         },
-        duplikat: {
-            icon: "warning",
-            title: "Data Duplikat",
-            text: `${capitalize(obj)} sudah digunakan.`,
-        },
-        invalid: {
-            icon: "warning",
-            title: "Permintaan Tidak Valid",
-            text: `${capitalize(obj)} tidak ditemukan atau parameter salah.`,
-        },
-        locked: {
-            icon: "warning",
-            title: "Terkunci",
-            text: `${capitalize(
-                obj
-            )} tidak dapat diubah karena terhubung ke user.`,
-        },
-        notfound: {
-            icon: "warning",
-            title: "Data Tidak Ditemukan",
-            text: "Rincian biaya tidak tersedia atau bukan status draft.",
-        },
-        nodetail: {
-            icon: "warning",
-            title: "Detail Kosong",
-            text: "Minimal satu baris rincian biaya harus diisi sebelum diajukan.",
-        },
-        invalid: {
-            icon: "warning",
-            title: "Permintaan Tidak Valid",
-            text: "Parameter tidak lengkap atau salah.",
-        },
-
-        // === INFO ===
         nochange: {
             icon: "info",
             title: "Tidak Ada Perubahan",
-            text: `Tidak ada perubahan data pada ${obj}.`,
+            text: `${capitalize(obj)} tidak mengalami perubahan.`,
         },
     };
 
@@ -133,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
             showConfirmButton: false,
         });
 
-        // Hapus param ?msg & ?obj setelah tampil
+        // Bersihkan param ?msg & ?obj di URL
         if (window.history.replaceState) {
             const cleanUrl = window.location.pathname;
             window.history.replaceState(null, null, cleanUrl);
@@ -141,16 +118,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Fungsi helper untuk kapitalisasi
+// Helper kapitalisasi huruf pertama
 function capitalize(str) {
+    if (!str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Fungsi konfirmasi hapus standar
+// Konfirmasi hapus standar
 function confirmDelete(url) {
     Swal.fire({
         title: "Yakin ingin menghapus?",
-        text: "Data ini akan dihapus secara permanen dan tidak bisa dikembalikan.",
+        text: "Data ini akan dihapus permanen & tidak dapat dikembalikan.",
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Ya, Hapus!",
@@ -162,8 +140,9 @@ function confirmDelete(url) {
     });
 }
 
+// Fallback manual jika mau panggil custom
 window.notifier = {
-    show: function (message, type = "info", timeout = 1000) {
+    show: function (message, type = "info", timeout = 1500) {
         const alertDiv = document.createElement("div");
         alertDiv.className = `alert alert-${type} position-fixed start-50 translate-middle-x`;
         alertDiv.style.top = "58%";
