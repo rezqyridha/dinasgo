@@ -4,8 +4,8 @@ require_once CONFIG_PATH . '/koneksi.php';
 require_once AUTH_PATH . '/session.php';
 
 $pageTitle = 'Edit Rincian Biaya';
-$role = $_SESSION['role'];
-$id_user = $_SESSION['id_user'];
+$role = $_SESSION['role'] ?? '';
+$id_user = $_SESSION['id_user'] ?? 0;
 
 if ($role !== 'admin') {
     header("Location: " . BASE_URL . "/unauthorized.php");
@@ -18,7 +18,7 @@ if ($id <= 0) {
     exit;
 }
 
-// Ambil data utama rincian
+// Ambil data rincian biaya
 $stmt = $conn->prepare("SELECT * FROM rincian_biaya WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
@@ -31,7 +31,6 @@ if (!$data) {
 }
 
 // Ambil detail
-$detail = [];
 $stmt = $conn->prepare("SELECT * FROM rincian_biaya_detail WHERE id_rincian = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
@@ -46,7 +45,7 @@ $pengajuanList = $conn->query("
     WHERE p.status = 'disetujui' OR p.id = {$data['id_pengajuan']}
 ");
 
-// Proses Update
+// === Proses Update ===
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_pengajuan = (int) $_POST['id_pengajuan'];
     $tanggal_rincian = $_POST['tanggal_rincian'];
@@ -57,11 +56,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    $valid = true;
     $total = 0;
+
     foreach ($detail as $item) {
-        $jumlah = (int) str_replace('.', '', $item['jumlah']);
+        if (empty($item['jenis_biaya']) || empty($item['jumlah']) || empty($item['satuan']) || empty($item['harga_satuan'])) {
+            $valid = false;
+            break;
+        }
+        $jumlah = (int) $item['jumlah'];
         $harga = (float) str_replace('.', '', $item['harga_satuan']);
         $total += $jumlah * $harga;
+    }
+
+    if (!$valid) {
+        header("Location: edit.php?id=$id&msg=incompletedetail");
+        exit;
     }
 
     $stmt = $conn->prepare("UPDATE rincian_biaya SET id_pengajuan=?, tanggal_rincian=?, jumlah_total=?, updated_at=NOW() WHERE id=?");
@@ -97,19 +107,20 @@ require_once LAYOUTS_PATH . '/sidebar.php';
 <div class="main-content app-content">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
-            <h4 class="mb-0">Edit Rincian Biaya</h4>
+            <h4 class="mb-0"><?= htmlspecialchars($pageTitle) ?></h4>
             <a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/index.php" class="btn btn-secondary">Kembali</a>
         </div>
+
         <form method="POST">
             <div class="card custom-card">
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label">Pilih Pengajuan</label>
-                        <select name="id_pengajuan" class="form-select" required disabled>
+                        <label class="form-label">Pengajuan</label>
+                        <select name="id_pengajuan" class="form-select" disabled>
                             <option value="">-- Pilih Pengajuan --</option>
                             <?php while ($row = $pengajuanList->fetch_assoc()): ?>
                                 <option value="<?= $row['id'] ?>" <?= $row['id'] == $data['id_pengajuan'] ? 'selected' : '' ?>>
-                                    <?= $row['nama'] ?> - <?= $row['tujuan'] ?> (<?= $row['tanggal_berangkat'] ?>)
+                                    <?= htmlspecialchars($row['nama']) ?> - <?= htmlspecialchars($row['tujuan']) ?> (<?= $row['tanggal_berangkat'] ?>)
                                 </option>
                             <?php endwhile; ?>
                         </select>
@@ -118,12 +129,12 @@ require_once LAYOUTS_PATH . '/sidebar.php';
 
                     <div class="mb-3">
                         <label class="form-label">Nomor Rincian</label>
-                        <input type="text" class="form-control" value="<?= $data['nomor_rincian'] ?>" readonly>
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($data['nomor_rincian']) ?>" readonly>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Tanggal</label>
-                        <input type="date" name="tanggal_rincian" class="form-control" required value="<?= $data['tanggal_rincian'] ?>">
+                        <input type="date" name="tanggal_rincian" class="form-control" value="<?= htmlspecialchars($data['tanggal_rincian']) ?>" required>
                     </div>
 
                     <hr>
@@ -149,8 +160,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                     <td>
                                         <div class="input-group">
                                             <span class="input-group-text">Rp</span>
-                                            <input type="text" name="detail[<?= $i ?>][harga_satuan]"
-                                                class="form-control rupiah"
+                                            <input type="text" name="detail[<?= $i ?>][harga_satuan]" class="form-control rupiah"
                                                 value="<?= number_format($item['harga_satuan'], 0, ',', '.') ?>" required>
                                         </div>
                                     </td>
@@ -159,7 +169,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <button type="button" class="btn btn-info btn-sm mt-4   " onclick="addRow()">Tambah Baris</button>
+                    <button type="button" class="btn btn-info btn-sm mt-4" onclick="addRow()">Tambah Baris</button>
                 </div>
                 <div class="card-footer text-end">
                     <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
@@ -176,40 +186,34 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         const tbody = document.getElementById('detail-body');
         const row = document.createElement('tr');
         row.innerHTML = `
-        <td><input type="text" name="detail[${rowIndex}][jenis_biaya]" class="form-control" placeholder="Contoh: Uang Harian" required></td>
-        <td><input type="text" name="detail[${rowIndex}][keterangan]" class="form-control" placeholder="Contoh: 2 hari di Tapin"></td>
-        <td><input type="number" name="detail[${rowIndex}][jumlah]" class="form-control" min="1" required></td>
-        <td><input type="text" name="detail[${rowIndex}][satuan]" class="form-control" placeholder="Contoh: hari" required></td>
-        <td>
-            <div class="input-group">
-                <span class="input-group-text">Rp</span>
-                <input type="text" name="detail[${rowIndex}][harga_satuan]" class="form-control text-end rupiah" placeholder="Contoh: 250000" required>
-            </div>
-        </td>
-        <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Hapus</button></td>
-    `;
+            <td><input type="text" name="detail[${rowIndex}][jenis_biaya]" class="form-control" required></td>
+            <td><input type="text" name="detail[${rowIndex}][keterangan]" class="form-control"></td>
+            <td><input type="number" name="detail[${rowIndex}][jumlah]" class="form-control" min="1" required></td>
+            <td><input type="text" name="detail[${rowIndex}][satuan]" class="form-control" required></td>
+            <td>
+                <div class="input-group">
+                    <span class="input-group-text">Rp</span>
+                    <input type="text" name="detail[${rowIndex}][harga_satuan]" class="form-control rupiah" required>
+                </div>
+            </td>
+            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Hapus</button></td>
+        `;
         tbody.appendChild(row);
         rowIndex++;
     }
-
 
     function removeRow(btn) {
         const tbody = document.getElementById('detail-body');
         if (tbody.rows.length > 1) {
             btn.closest('tr').remove();
         } else {
-            notifier.show('Minimal satu baris rincian harus ada.', 'danger');
+            alert('Minimal satu baris rincian harus ada.');
         }
-    }
-
-    // Format rupiah
-    function formatRupiah(el) {
-        el.value = el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
     document.addEventListener('input', function(e) {
         if (e.target.classList.contains('rupiah')) {
-            formatRupiah(e.target);
+            e.target.value = e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
     });
 </script>

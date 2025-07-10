@@ -4,15 +4,15 @@ require_once CONFIG_PATH . '/koneksi.php';
 require_once AUTH_PATH . '/session.php';
 
 $pageTitle = 'Tambah Rincian Biaya';
-$role = $_SESSION['role'];
-$id_user = $_SESSION['id_user'];
+$role = $_SESSION['role'] ?? '';
+$id_user = $_SESSION['id_user'] ?? 0;
 
 if ($role !== 'admin') {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-// Ambil pengajuan yang sudah disetujui & belum punya rincian
+// Ambil list pengajuan valid
 $pengajuanList = $conn->query("
     SELECT p.id, peg.nama, p.tujuan, p.tanggal_berangkat
     FROM pengajuan_perjalanan p
@@ -21,16 +21,14 @@ $pengajuanList = $conn->query("
       AND p.id NOT IN (SELECT id_pengajuan FROM rincian_biaya)
 ");
 
-// Fungsi penomoran otomatis
 function generateNomorRincian($conn)
 {
     $year = date('Y');
     $prefix = 'RB-';
-    $query = $conn->query("SELECT nomor_rincian FROM rincian_biaya WHERE nomor_rincian LIKE '{$prefix}___/{$year}' ORDER BY nomor_rincian DESC LIMIT 1");
-    if ($row = $query->fetch_assoc()) {
-        // Ambil 3 digit angka setelah 'RB-'
+    $q = $conn->query("SELECT nomor_rincian FROM rincian_biaya WHERE nomor_rincian LIKE '{$prefix}___/{$year}' ORDER BY nomor_rincian DESC LIMIT 1");
+    if ($row = $q->fetch_assoc()) {
         $last = (int) substr($row['nomor_rincian'], 3, 3);
-        $new  = $last + 1;
+        $new = $last + 1;
     } else {
         $new = 1;
     }
@@ -41,57 +39,61 @@ $nomor_rincian = generateNomorRincian($conn);
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_pengajuan   = (int) $_POST['id_pengajuan'];
+    $id_pengajuan = (int) $_POST['id_pengajuan'];
     $tanggal_rincian = $_POST['tanggal_rincian'];
-    $detail         = $_POST['detail'] ?? [];
+    $detail = $_POST['detail'] ?? [];
 
     if (!$id_pengajuan || !$tanggal_rincian || count($detail) === 0) {
         $error = 'Pengajuan, tanggal, dan minimal satu rincian wajib diisi.';
     } else {
-        // Validasi isi detail
-        $valid = true;
-        foreach ($detail as $item) {
-            if (
-                empty($item['jenis_biaya']) || empty($item['jumlah']) ||
-                empty($item['satuan']) || empty($item['harga_satuan'])
-            ) {
-                $valid = false;
-                break;
-            }
-        }
+        $cekBukti = $conn->prepare("SELECT COUNT(*) AS jml FROM dokumen WHERE id_pengajuan = ? AND jenis = 'bukti_pengeluaran'");
+        $cekBukti->bind_param("i", $id_pengajuan);
+        $cekBukti->execute();
+        $resBukti = $cekBukti->get_result()->fetch_assoc();
 
-        if (!$valid) {
-            $error = 'Setiap baris rincian harus diisi lengkap.';
+        if ($resBukti['jml'] < 1) {
+            $error = 'Bukti pengeluaran belum diupload oleh pegawai.';
         } else {
-            // Hitung total
-            $total = 0;
+            $valid = true;
             foreach ($detail as $item) {
-                $jumlah = (int) $item['jumlah'];
-                $harga = (float) str_replace('.', '', $item['harga_satuan']);
-                $total += $jumlah * $harga;
+                if (empty($item['jenis_biaya']) || empty($item['jumlah']) || empty($item['satuan']) || empty($item['harga_satuan'])) {
+                    $valid = false;
+                    break;
+                }
             }
 
-            $stmt = $conn->prepare("INSERT INTO rincian_biaya (id_pengajuan, nomor_rincian, tanggal_rincian, jumlah_total, dibuat_oleh) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("issdi", $id_pengajuan, $nomor_rincian, $tanggal_rincian, $total, $id_user);
-            $stmt->execute();
-            $id_rincian = $stmt->insert_id;
+            if (!$valid) {
+                $error = 'Setiap baris rincian harus diisi lengkap.';
+            } else {
+                $total = 0;
+                foreach ($detail as $item) {
+                    $jumlah = (int) $item['jumlah'];
+                    $harga = (float) str_replace('.', '', $item['harga_satuan']);
+                    $total += $jumlah * $harga;
+                }
 
-            $stmtDetail = $conn->prepare("INSERT INTO rincian_biaya_detail (id_rincian, jenis_biaya, keterangan, jumlah, satuan, harga_satuan) VALUES (?, ?, ?, ?, ?, ?)");
-            foreach ($detail as $item) {
-                $stmtDetail->bind_param(
-                    "issisd",
-                    $id_rincian,
-                    $item['jenis_biaya'],
-                    $item['keterangan'],
-                    $item['jumlah'],
-                    $item['satuan'],
-                    str_replace('.', '', $item['harga_satuan'])
-                );
-                $stmtDetail->execute();
+                $stmt = $conn->prepare("INSERT INTO rincian_biaya (id_pengajuan, nomor_rincian, tanggal_rincian, jumlah_total, dibuat_oleh) VALUES (?, ?, ?, ?, ?)");
+                $stmt->bind_param("issdi", $id_pengajuan, $nomor_rincian, $tanggal_rincian, $total, $id_user);
+                $stmt->execute();
+                $id_rincian = $stmt->insert_id;
+
+                $stmtDetail = $conn->prepare("INSERT INTO rincian_biaya_detail (id_rincian, jenis_biaya, keterangan, jumlah, satuan, harga_satuan) VALUES (?, ?, ?, ?, ?, ?)");
+                foreach ($detail as $item) {
+                    $stmtDetail->bind_param(
+                        "issisd",
+                        $id_rincian,
+                        $item['jenis_biaya'],
+                        $item['keterangan'],
+                        $item['jumlah'],
+                        $item['satuan'],
+                        str_replace('.', '', $item['harga_satuan'])
+                    );
+                    $stmtDetail->execute();
+                }
+
+                header("Location: " . BASE_URL . "/modules/shared/rincian_biaya/index.php?msg=added&obj=rincian");
+                exit;
             }
-
-            header("Location: " . BASE_URL . "/modules/shared/rincian_biaya/index.php?msg=added&obj=rincian");
-            exit;
         }
     }
 }
@@ -110,7 +112,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         </div>
 
         <?php if ($error): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
+            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
         <form method="POST">
@@ -121,18 +123,24 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                         <select name="id_pengajuan" id="id_pengajuan" class="form-select" required>
                             <option value="">-- Pilih Pengajuan --</option>
                             <?php while ($row = $pengajuanList->fetch_assoc()): ?>
-                                <option value="<?= $row['id'] ?>"><?= $row['nama'] ?> - Tujuan Ke(<?= $row['tujuan'] ?>) - (<?= $row['tanggal_berangkat'] ?>)</option>
+                                <option value="<?= $row['id'] ?>">
+                                    <?= $row['nama'] ?> - <?= $row['tujuan'] ?> (<?= $row['tanggal_berangkat'] ?>)
+                                </option>
                             <?php endwhile; ?>
                         </select>
+                        <div id="preview-bukti" class="mt-3"></div>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Nomor Rincian</label>
                         <input type="text" class="form-control" value="<?= htmlspecialchars($nomor_rincian) ?>" readonly>
                     </div>
+
                     <div class="mb-3">
                         <label for="tanggal_rincian" class="form-label">Tanggal</label>
                         <input type="date" name="tanggal_rincian" id="tanggal_rincian" class="form-control" required>
                     </div>
+
                     <hr>
                     <h5>Detail Biaya</h5>
                     <table class="table table-bordered" id="table-detail">
@@ -148,10 +156,10 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                         </thead>
                         <tbody id="detail-body">
                             <tr>
-                                <td><input type="text" name="detail[0][jenis_biaya]" class="form-control" placeholder="Contoh: Uang Harian" required></td>
-                                <td><input type="text" name="detail[0][keterangan]" class="form-control" placeholder="Contoh: 2 hari di Tapin"></td>
-                                <td><input type="number" name="detail[0][jumlah]" class="form-control " min="1" required></td>
-                                <td><input type="text" name="detail[0][satuan]" class="form-control" placeholder="Contoh: hari" required></td>
+                                <td><input type="text" name="detail[0][jenis_biaya]" class="form-control" required></td>
+                                <td><input type="text" name="detail[0][keterangan]" class="form-control"></td>
+                                <td><input type="number" name="detail[0][jumlah]" class="form-control" min="1" required></td>
+                                <td><input type="text" name="detail[0][satuan]" class="form-control" required></td>
                                 <td>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
@@ -161,7 +169,6 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                 <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Hapus</button></td>
                             </tr>
                         </tbody>
-
                     </table>
                     <button type="button" class="btn btn-info btn-sm mt-4" onclick="addRow()">Tambah Baris</button>
                 </div>
@@ -180,14 +187,14 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         const tbody = document.getElementById('detail-body');
         const row = document.createElement('tr');
         row.innerHTML = `
-        <td><input type="text" name="detail[${rowIndex}][jenis_biaya]" class="form-control" placeholder="Contoh: Uang Harian" required></td>
-        <td><input type="text" name="detail[${rowIndex}][keterangan]" class="form-control" placeholder="Contoh: 2 hari di Tapin"></td>
+        <td><input type="text" name="detail[${rowIndex}][jenis_biaya]" class="form-control" required></td>
+        <td><input type="text" name="detail[${rowIndex}][keterangan]" class="form-control"></td>
         <td><input type="number" name="detail[${rowIndex}][jumlah]" class="form-control" min="1" required></td>
-        <td><input type="text" name="detail[${rowIndex}][satuan]" class="form-control" placeholder="Contoh: hari" required></td>
+        <td><input type="text" name="detail[${rowIndex}][satuan]" class="form-control" required></td>
         <td>
             <div class="input-group">
                 <span class="input-group-text">Rp</span>
-                <input type="text" name="detail[${rowIndex}][harga_satuan]" class="form-control text-end rupiah" placeholder="Contoh: 250000" required>
+                <input type="text" name="detail[${rowIndex}][harga_satuan]" class="form-control text-end rupiah" required>
             </div>
         </td>
         <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Hapus</button></td>
@@ -196,35 +203,44 @@ require_once LAYOUTS_PATH . '/sidebar.php';
         rowIndex++;
     }
 
-
-    function formatRupiah(el) {
-        el.value = el.value.replace(/\D/g, '')
-            .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    function removeRow(btn) {
+        const tbody = document.getElementById('detail-body');
+        if (tbody.rows.length > 1) {
+            btn.closest('tr').remove();
+        } else {
+            alert('Minimal satu baris rincian harus ada.');
+        }
     }
 
-    // Format angka saat user mengetik
+    function formatRupiah(el) {
+        el.value = el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
     document.addEventListener('input', function(e) {
         if (e.target.classList.contains('rupiah')) {
             formatRupiah(e.target);
         }
     });
 
-    // Bersihkan format saat submit
     document.querySelector('form').addEventListener('submit', function() {
         document.querySelectorAll('.rupiah').forEach(function(input) {
-            input.value = input.value.replace(/\./g, ''); // Hapus titik
+            input.value = input.value.replace(/\./g, '');
         });
     });
 
-    // Revisi fungsi removeRow
-    function removeRow(btn) {
-        const tbody = document.getElementById('detail-body');
-        if (tbody.rows.length > 1) {
-            btn.closest('tr').remove();
+    // ✅ AJAX Preview Bukti
+    document.getElementById('id_pengajuan').addEventListener('change', function() {
+        const id = this.value;
+        if (id) {
+            fetch('ajax_get_bukti.php?id_pengajuan=' + id)
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('preview-bukti').innerHTML = html;
+                });
         } else {
-            notifier.show('Minimal satu baris rincian harus ada.', 'danger', 1000);
+            document.getElementById('preview-bukti').innerHTML = '';
         }
-    }
+    });
 </script>
 
 <?php
