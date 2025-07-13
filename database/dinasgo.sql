@@ -226,12 +226,13 @@ CREATE TABLE IF NOT EXISTS `rincian_biaya_detail` (
   FOREIGN KEY (`id_rincian`) REFERENCES `rincian_biaya`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `rincian_biaya_detail` VALUES
-  (1, 4, 'Transportasi', 'Perjalanan dinas ke luar kota', 2, 'orang', 1000000.00),
-  (2, 4, 'Penginapan', 'Hotel 2 malam', 2, 'malam', 750000.00),
-  (3, 4, 'Uang Makan', 'Uang makan harian', 2, 'hari', 500000.00),
-  (4, 4, 'Lain-lain', 'Biaya tak terduga', 1, 'paket', 500000.00);
-
+INSERT INTO `rincian_biaya_detail`
+(`id`, `id_rincian`, `jenis_biaya`, `keterangan`, `jumlah`, `satuan`, `harga_satuan`)
+VALUES
+(1, 4, 'Transportasi', 'Perjalanan dinas ke luar kota', 2, 'orang', 1000000.00),
+(2, 4, 'Penginapan', 'Hotel 2 malam', 2, 'malam', 750000.00),
+(3, 4, 'Uang Makan', 'Uang makan harian', 2, 'hari', 500000.00),
+(4, 4, 'Lain-lain', 'Biaya tak terduga', 1, 'paket', 500000.00);
 -- =================================================================
 -- 1️⃣1️⃣ PENCAIRAN DANA
 -- =================================================================
