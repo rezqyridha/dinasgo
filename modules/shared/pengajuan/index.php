@@ -7,15 +7,17 @@ $pageTitle = 'Pengajuan Perjalanan Dinas';
 $role = $_SESSION['role'];
 $id_user = $_SESSION['id_user'];
 
-// Validasi role
+// Validasi role yang boleh akses
 $canRead = in_array($role, ['admin', 'pegawai', 'atasan']);
 if (!$canRead) {
     header("Location: " . BASE_URL . "/unauthorized.php");
     exit;
 }
 
-// Ambil data pengajuan
+$query = ""; // Siapkan variabel query
+
 if ($role === 'pegawai') {
+    // 1) Ambil id_pegawai milik user pegawai
     $stmt = $conn->prepare("SELECT id FROM pegawai WHERE id_user = ?");
     $stmt->bind_param("i", $id_user);
     $stmt->execute();
@@ -25,20 +27,37 @@ if ($role === 'pegawai') {
 
     $id_pegawai = $id_pegawai ?? 0;
 
+    // 2) Filter pengajuan hanya milik pegawai ini
     $query = "
         SELECT p.*, peg.nama AS nama_pegawai
         FROM pengajuan_perjalanan p
         JOIN pegawai peg ON p.id_pegawai = peg.id
         WHERE p.id_pegawai = $id_pegawai
-        ORDER BY p.created_at DESC";
-} else {
+        ORDER BY p.created_at DESC
+    ";
+} elseif ($role === 'atasan') {
+    // 1) Ambil id_user atasan (langsung, tidak perlu join pegawai lagi)
+    $id_user_atasan = $id_user;
+
+    // 2) Filter pengajuan dari pegawai bawahan yang id_atasan = user.id
     $query = "
-    SELECT p.*, peg.nama AS nama_pegawai
-    FROM pengajuan_perjalanan p
-    JOIN pegawai peg ON p.id_pegawai = peg.id
-    ORDER BY p.created_at DESC
-";
+        SELECT p.*, peg.nama AS nama_pegawai
+        FROM pengajuan_perjalanan p
+        JOIN pegawai peg ON p.id_pegawai = peg.id
+        WHERE peg.id_atasan = $id_user_atasan
+        ORDER BY p.created_at DESC
+    ";
+} else {
+    // Admin melihat semua data
+    $query = "
+        SELECT p.*, peg.nama AS nama_pegawai
+        FROM pengajuan_perjalanan p
+        JOIN pegawai peg ON p.id_pegawai = peg.id
+        ORDER BY p.created_at DESC
+    ";
 }
+
+// Eksekusi query
 $result = $conn->query($query);
 
 require_once LAYOUTS_PATH . '/head.php';
@@ -46,6 +65,7 @@ require_once LAYOUTS_PATH . '/header.php';
 require_once LAYOUTS_PATH . '/topbar.php';
 require_once LAYOUTS_PATH . '/sidebar.php';
 ?>
+
 
 <div class="main-content app-content">
     <div class="container-fluid">
@@ -139,7 +159,6 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                                 </span>
                                             <?php endif; ?>
                                         </td>
-
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>

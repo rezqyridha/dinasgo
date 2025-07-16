@@ -11,6 +11,15 @@ if ($_SESSION['role'] !== 'admin') {
     exit;
 }
 
+// Ambil daftar atasan dari tabel user (role = 'atasan')
+$queryAtasan = $conn->query("SELECT id, nama FROM user WHERE role = 'atasan' ORDER BY nama ASC");
+$daftarAtasan = [];
+if ($queryAtasan) {
+    while ($row = $queryAtasan->fetch_assoc()) {
+        $daftarAtasan[] = $row;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama    = trim($_POST['nama'] ?? '');
     $nip     = trim($_POST['nip'] ?? '');
@@ -18,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $no_hp   = trim($_POST['no_hp'] ?? '');
     $email   = trim($_POST['email'] ?? '');
     $alamat  = trim($_POST['alamat'] ?? '');
+    $id_atasan = $_POST['id_atasan'] ?? null;
+    $id_atasan = ($id_atasan !== '') ? intval($id_atasan) : null;
 
     if ($nama === '' || $nip === '' || $jabatan === '') {
         header("Location: add.php?msg=kosong");
@@ -47,9 +58,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $cekUser->close();
 
-    // Insert data
-    $stmt = $conn->prepare("INSERT INTO pegawai (id_user, nama, nip, jabatan, no_hp, email, alamat) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("issssss", $id_user, $nama, $nip, $jabatan, $no_hp, $email, $alamat);
+    // Insert data pegawai termasuk id_atasan
+    $stmt = $conn->prepare("
+        INSERT INTO pegawai 
+        (id_user, nama, nip, jabatan, no_hp, email, alamat, id_atasan) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    $stmt->bind_param("issssssi", $id_user, $nama, $nip, $jabatan, $no_hp, $email, $alamat, $id_atasan);
 
     if ($stmt->execute()) {
         header("Location: index.php?msg=added");
@@ -58,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit;
 }
-
 
 require_once LAYOUTS_PATH . '/head.php';
 require_once LAYOUTS_PATH . '/header.php';
@@ -88,6 +102,19 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                     <div class="mb-3">
                         <label for="jabatan" class="form-label">Jabatan <span class="text-danger">*</span></label>
                         <input type="text" name="jabatan" id="jabatan" class="form-control" required maxlength="50" placeholder="Masukkan jabatan">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_atasan" class="form-label">Pilih Atasan</label>
+                        <select name="id_atasan" id="id_atasan" class="form-select">
+                            <option value="">-- Pilih Atasan --</option>
+                            <?php foreach ($daftarAtasan as $atasan): ?>
+                                <option value="<?= htmlspecialchars($atasan['id']) ?>">
+                                    <?= htmlspecialchars($atasan['nama']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="text-muted">Boleh dikosongkan jika pegawai ini tidak punya atasan.</small>
                     </div>
 
                     <div class="mb-3">

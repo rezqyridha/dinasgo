@@ -137,7 +137,7 @@ require_once LAYOUTS_PATH . '/sidebar.php';
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted">Belum ada data rincian biaya.</td>
+                                    <td colspan="9" class="text-center text-muted">Belum ada data rincian biaya.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

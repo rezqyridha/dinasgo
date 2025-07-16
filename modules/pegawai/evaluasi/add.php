@@ -93,11 +93,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
 
                 if ($stmt->execute()) {
+                    // Setelah evaluasi berhasil, update status pengajuan jadi 'selesai'
+                    $stmtUpdate = $conn->prepare("
+                        UPDATE pengajuan_perjalanan 
+                        SET status = 'selesai'
+                        WHERE id = ? AND status = 'disetujui'
+                    ");
+                    $stmtUpdate->bind_param("i", $input['id_pengajuan']);
+                    $stmtUpdate->execute();
+                    $stmtUpdate->close();
+
                     header("Location: " . BASE_URL . "/modules/shared/evaluasi/index.php?msg=added&obj=evaluasi");
                     exit;
-                } else {
-                    $error = "Gagal menyimpan evaluasi. Coba lagi.";
                 }
+                $error = "Gagal menyimpan evaluasi. Coba lagi.";
             } else {
                 $error = "Gagal mengunggah lampiran.";
             }

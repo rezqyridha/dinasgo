@@ -19,35 +19,35 @@ function is_uri_match(array $patterns): bool
 
         <!-- DASHBOARD -->
         <li class="slide__category"><span class="category-name">Dashboard</span></li>
-        <li class="slide <?= str_contains($current_uri, '/dashboard.php') ? 'active' : '' ?>">
+        <li class="slide <?= str_contains($current_uri, '/bendahara/dashboard.php') ? 'active' : '' ?>">
             <a href="<?= BASE_URL ?>/modules/bendahara/dashboard.php" class="side-menu__item">
                 <i class="ti-home side-menu__icon"></i>
                 <span class="side-menu__label">Dashboard</span>
             </a>
         </li>
 
-        <!-- DATA PERJALANAN -->
-        <li class="slide__category"><span class="category-name">Data Perjalanan</span></li>
+        <!-- MANAJEMEN KEUANGAN -->
+        <li class="slide__category"><span class="category-name">Manajemen Dana</span></li>
         <?php
-        $data_uri = ['/rincian_biaya/', '/pencairan_dana/'];
+        $dana_uri = ['/rincian_biaya/index.php', '/pencairan_dana/index.php'];
         ?>
-        <li class="slide has-sub <?= is_uri_match($data_uri) ? 'open active' : '' ?>">
+        <li class="slide has-sub <?= is_uri_match($dana_uri) ? 'open active' : '' ?>">
             <a href="#" class="side-menu__item">
                 <i class="ti-wallet side-menu__icon"></i>
-                <span class="side-menu__label">Manajemen Dana</span>
+                <span class="side-menu__label">Pengelolaan Dana</span>
                 <i class="fe fe-chevron-right side-menu__angle"></i>
             </a>
             <ul class="slide-menu child2">
                 <li>
                     <a href="<?= BASE_URL ?>/modules/shared/rincian_biaya/index.php"
-                        class="side-menu__item <?= str_contains($current_uri, '/rincian_biaya/') ? 'active' : '' ?>">
-                        Rincian Biaya
+                        class="side-menu__item <?= str_contains($current_uri, '/rincian_biaya/index.php') ? 'active' : '' ?>">
+                        Verifikasi Rincian Biaya
                     </a>
                 </li>
                 <li>
                     <a href="<?= BASE_URL ?>/modules/shared/pencairan_dana/index.php"
-                        class="side-menu__item <?= str_contains($current_uri, '/pencairan_dana/') ? 'active' : '' ?>">
-                        Pencairan Dana
+                        class="side-menu__item <?= str_contains($current_uri, '/pencairan_dana/index.php') ? 'active' : '' ?>">
+                        Pencairan Dana GU
                     </a>
                 </li>
             </ul>
@@ -56,7 +56,7 @@ function is_uri_match(array $patterns): bool
         <!-- LAPORAN -->
         <li class="slide__category"><span class="category-name">Laporan</span></li>
         <?php
-        $laporan_uri = ['/laporan/'];
+        $laporan_uri = ['laporan/rincian_biaya', 'laporan/pencairan_dana'];
         ?>
         <li class="slide has-sub <?= is_uri_match($laporan_uri) ? 'open active' : '' ?>">
             <a href="#" class="side-menu__item">
@@ -66,9 +66,15 @@ function is_uri_match(array $patterns): bool
             </a>
             <ul class="slide-menu child2">
                 <li>
-                    <a href="<?= BASE_URL ?>/modules/shared/laporan/index.php"
-                        class="side-menu__item <?= str_contains($current_uri, '/laporan/') ? 'active' : '' ?>">
-                        Laporan Keuangan
+                    <a href="<?= BASE_URL ?>/modules/shared/laporan/rincian_biaya.php"
+                        class="side-menu__item <?= str_contains($current_uri, '/rincian_biaya') ? 'active' : '' ?>">
+                        Biaya Perjalanan
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>/modules/shared/laporan/pencairan_dana.php"
+                        class="side-menu__item <?= str_contains($current_uri, '/pencairan_dana') ? 'active' : '' ?>">
+                        Pencairan Dana
                     </a>
                 </li>
             </ul>
