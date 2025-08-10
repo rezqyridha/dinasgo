@@ -64,53 +64,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($input['id_pengajuan'] === '' || empty($_FILES['files']['name'][0])) {
         $error = "Semua field wajib diisi dan file harus dipilih.";
     } else {
-        $upload_dir = dirname(__DIR__, 3) . "/uploads/dokumen/{$input['id_pengajuan']}/";
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
+        // ✅ Tambahkan pengecekan apakah sudah ada dokumen dengan id_pengajuan dan jenis yang sama
+        $cek = $conn->prepare("SELECT COUNT(*) AS total FROM dokumen WHERE id_pengajuan = ? AND jenis = ?");
+        $cek->bind_param("is", $input['id_pengajuan'], $input['jenis']);
+        $cek->execute();
+        $resultCek = $cek->get_result()->fetch_assoc();
 
-        $allowed_ext = ['pdf', 'docx'];
-        $max_size = 5 * 1024 * 1024;
-
-        $success = true;
-
-        foreach ($_FILES['files']['name'] as $index => $name) {
-            $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-
-            if (!in_array($ext, $allowed_ext)) {
-                $error = "Format file tidak diizinkan.";
-                $success = false;
-                break;
+        if ($resultCek['total'] > 0) {
+            $error = "Dokumen untuk pengajuan dan jenis ini sudah ada.";
+        } else {
+            $upload_dir = dirname(__DIR__, 3) . "/uploads/dokumen/{$input['id_pengajuan']}/";
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
             }
 
-            if ($_FILES['files']['size'][$index] > $max_size) {
-                $error = "Ukuran file melebihi batas 5MB.";
-                $success = false;
-                break;
-            }
+            $allowed_ext = ['pdf', 'docx'];
+            $max_size = 5 * 1024 * 1024;
 
-            $safeName = preg_replace("/[^A-Za-z0-9_\-\.]/", "_", basename($name));
-            $fileName = time() . '_' . $safeName;
-            $targetPath = $upload_dir . $fileName;
+            $success = true;
 
-            if (move_uploaded_file($_FILES['files']['tmp_name'][$index], $targetPath)) {
-                $stmt = $conn->prepare("INSERT INTO dokumen (id_pengajuan, id_user, nama_file, jenis) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("iiss", $input['id_pengajuan'], $id_user, $fileName, $input['jenis']);
-                if (!$stmt->execute()) {
-                    $error = "Gagal simpan ke database.";
+            foreach ($_FILES['files']['name'] as $index => $name) {
+                $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+                if (!in_array($ext, $allowed_ext)) {
+                    $error = "Format file tidak diizinkan.";
                     $success = false;
                     break;
                 }
-            } else {
-                $error = "Gagal upload file.";
-                $success = false;
-                break;
-            }
-        }
 
-        if ($success) {
-            header("Location: " . BASE_URL . "/modules/shared/dokumen/index.php?msg=added&obj=dokumen");
-            exit;
+                if ($_FILES['files']['size'][$index] > $max_size) {
+                    $error = "Ukuran file melebihi batas 5MB.";
+                    $success = false;
+                    break;
+                }
+
+                $safeName = preg_replace("/[^A-Za-z0-9_\-\.]/", "_", basename($name));
+                $fileName = time() . '_' . $safeName;
+                $targetPath = $upload_dir . $fileName;
+
+                if (move_uploaded_file($_FILES['files']['tmp_name'][$index], $targetPath)) {
+                    $stmt = $conn->prepare("INSERT INTO dokumen (id_pengajuan, id_user, nama_file, jenis) VALUES (?, ?, ?, ?)");
+                    $stmt->bind_param("iiss", $input['id_pengajuan'], $id_user, $fileName, $input['jenis']);
+                    if (!$stmt->execute()) {
+                        $error = "Gagal simpan ke database.";
+                        $success = false;
+                        break;
+                    }
+                } else {
+                    $error = "Gagal upload file.";
+                    $success = false;
+                    break;
+                }
+            }
+
+            if ($success) {
+                header("Location: " . BASE_URL . "/modules/shared/dokumen/index.php?msg=added&obj=dokumen");
+                exit;
+            }
         }
     }
 }
